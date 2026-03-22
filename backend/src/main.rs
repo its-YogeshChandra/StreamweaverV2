@@ -1,4 +1,4 @@
-use actix_web::{App, HttpServer, middleware::Logger, web};
+use actix_web::{App, HttpServer, middleware::Logger};
 use std::io::Result;
 
 
