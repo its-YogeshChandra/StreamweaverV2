@@ -46,17 +46,15 @@ pub struct NewJob {
 
 
 trait Dbfunctions {
-fn create( conn: &mut PgConnection, job: &Job ) -> Result<Job, diesel::result::Error>;
+//fn create( conn: &mut PgConnection, job: &Job ) -> Result<Job, diesel::result::Error>;
  //fn update(&mut self , conn: &mut PgConnection) -> Result<Job, diesel::result::Error>;    
  //fn findbyid (conn: &mut PgConnection, id: Uuid) -> Result<Job, diesel::result::Error>;
 }
 
-
-
 //creating the related datbase function
-impl Dbfunctions for Job {
+impl  Job {
    //create the model functions 
-    fn create(conn: &mut PgConnection, job: &Job) -> Result<Job, diesel::result::Error> {
+  pub fn create(conn: &mut PgConnection, job: &Job) -> Result<Job, diesel::result::Error> {
 
     use crate::schema::jobs;
 
