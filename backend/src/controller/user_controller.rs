@@ -17,10 +17,12 @@ pub async fn upload_video (MultipartForm(form): MultipartForm<UploadVideo>) -> i
    let file_name = form.video.file_name.unwrap().to_string();
       println!("File name: {}", file_name);
    
-  let destination_folder = format!("public/{}", file_name);
+  let destination_folder = format!("public/{}", file_name.clone());
 
    //write the video into the destination folder 
    form.video.file.persist(&destination_folder).unwrap(); 
+
+//connect to postgress 
 
 HttpResponse::Ok().body("Video uploaded successfully")            
         //create the controller for video upload 
