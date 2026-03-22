@@ -1,7 +1,7 @@
 use actix_web::{
     post, HttpResponse, Responder
 };
-use actix_multipart::form::{MultipartForm, tempfile::TempFile, text::Text};
+use actix_multipart::form::{MultipartForm, tempfile::TempFile};
 
 #[derive(Debug, MultipartForm)]
 pub struct UploadVideo {

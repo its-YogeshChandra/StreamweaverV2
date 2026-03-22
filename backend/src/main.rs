@@ -2,6 +2,7 @@ use actix_web::{App, HttpServer, middleware::Logger};
 use std::io::Result;
 mod controller;
 mod database;
+mod schema;
 use crate::database::establish_connection;
 use crate::controller::upload_video;
 
@@ -9,7 +10,7 @@ use crate::controller::upload_video;
 #[actix_web::main]
 async fn main() -> Result<()>{
 
-establish_connection();
+establish_connection().expect("Failed to connect to database");
 
 HttpServer::new(||{
         App::new()
