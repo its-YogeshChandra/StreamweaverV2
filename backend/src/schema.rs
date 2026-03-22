@@ -7,10 +7,10 @@ diesel::table! {
         key_hash -> Text,
         webhook_url -> Nullable<Text>,
         webhook_secret -> Nullable<Text>,
-        rate_limit -> Int4,
-        is_active -> Bool,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
+        rate_limit -> Nullable<Int4>,
+        is_active -> Nullable<Bool>,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -20,7 +20,7 @@ diesel::table! {
         job_id -> Uuid,
         key_index -> Int4,
         key_bytes -> Bytea,
-        created_at -> Timestamp,
+        created_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -30,7 +30,7 @@ diesel::table! {
         api_key_id -> Uuid,
         status -> Text,
         stage -> Nullable<Text>,
-        progress -> Int4,
+        progress -> Nullable<Int4>,
         file_path -> Text,
         file_size -> Nullable<Int8>,
         original_name -> Nullable<Text>,
@@ -38,8 +38,8 @@ diesel::table! {
         output_urls -> Nullable<Jsonb>,
         metadata -> Nullable<Jsonb>,
         error_message -> Nullable<Text>,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
     }
 }
 
