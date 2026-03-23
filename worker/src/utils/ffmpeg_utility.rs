@@ -1,4 +1,5 @@
 use std::process::{Command, Stdio};
+use std::path::Path;
 
 pub fn convert_to_wav(input_path: &str, output_path: &str) -> Result<(), String> {
 //output directory  
@@ -113,12 +114,12 @@ impl VideoConfig {
 }
 
 
-
-pub fn convert_to_hls(input_path: &str, output_path: &str) -> Result<(), String> {
+//convert the video to the hls stream 
+pub fn convert_to_hls(input_path: &str, output_path: &str, bitrate: &str, content_length: &str, video_path: &str) -> Result<(), String> {
 
 //the output directory 
-
-
+let vidoutput_dir = "media/output";
+let final_destination = Path::new(vidoutput_dir).join("index.m3u8"); 
 
 //create the process command
 let mut ffmpeg_mod = Command::new("ffmpeg");
@@ -185,22 +186,22 @@ let mut ffmpeg_mod = Command::new("ffmpeg");
         .arg("aac")
         .args(vid_options);
 
-    // .arg(output_options)
-    // .arg(vidoutput)
-    // .stdout(Stdio::piped())
-    // .stderr(Stdio::piped())
-    // .output()
-    // .expect("failed to run ffmped");
-
     let cmd = video_chunker
         .arg(final_destination)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .output()
-        .expect("failed to run ffmpeg");
-
-
-
-
-
+        .output();
+    
+    match cmd {
+        Ok(output) => {
+            if output.status.success() {
+                //return value needed 
+                Ok(())
+            } else {
+                //return value needed 
+                Err(String::from_utf8_lossy(&output.stderr).to_string())
+            }
+        }
+        Err(e) => Err(e.to_string()),
+    }
 }
