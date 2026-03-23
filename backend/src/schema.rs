@@ -44,6 +44,5 @@ diesel::table! {
 }
 
 diesel::joinable!(encryption_keys -> jobs (job_id));
-diesel::joinable!(jobs -> api_keys (api_key_id));
 
 diesel::allow_tables_to_appear_in_same_query!(api_keys, encryption_keys, jobs,);

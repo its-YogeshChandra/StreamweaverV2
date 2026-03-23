@@ -1,16 +1,27 @@
 use actix_web::{
-    post, HttpResponse, Responder
+    HttpResponse, Responder, http::StatusCode, post
 };
 use actix_multipart::form::{MultipartForm, tempfile::TempFile};
-use crate::database::model_functions::job_functions::Job;
+use crate::{
+    database::model_functions::job_functions::Job,
+    database::redis_function::redis_jobs::{set_job, JobList},
+};
 use crate::establish_connection;
-use uuid::Uuid;
+use uuid::Uuid; 
+use serde::Serialize;
 
 #[derive(Debug, MultipartForm)]
 pub struct UploadVideo {
     #[multipart(limit = "100mb")]
     video: TempFile,
 }
+
+#[derive(Serialize)]
+pub struct Response{
+ job_id : String,
+ status: String,
+}
+
 
 
 #[post("/upload")]
@@ -31,7 +42,7 @@ pub async fn upload_video (MultipartForm(form): MultipartForm<UploadVideo>) -> i
    let job = Job {
     id: Uuid::new_v4(),
     api_key_id: Uuid::new_v4(),
-    status: "pending".to_string(),
+    status: "queued".to_string(),
     stage: None,
     progress: None,
     file_path: destination_folder,
@@ -49,8 +60,23 @@ pub async fn upload_video (MultipartForm(form): MultipartForm<UploadVideo>) -> i
 let db_result = Job::create(&mut conn, &job).unwrap();
 
 //call the redis 
+let job_list = JobList {
+    job_id: db_result.id.to_string(),
+    file_path: db_result.file_path,
+};
 
+let redis_result = set_job(job_list);
 
-HttpResponse::Ok().body("Video uploaded successfully")            
+if redis_result.success == true {
+
+    let response_payload = Response {
+        job_id: db_result.id.to_string(),
+        status: "pending".to_string(),
+    };
+    HttpResponse::Ok().status(StatusCode::from_u16(202).unwrap()).json(response_payload)            
+}else {
+    HttpResponse::InternalServerError().body("Failed to upload video")
+}
+
 
 }
