@@ -2,11 +2,11 @@ use actix_web::{
     HttpResponse, Responder, http::StatusCode, post
 };
 use actix_multipart::form::{MultipartForm, tempfile::TempFile};
-use crate::{
-    database::model_functions::job_functions::Job,
-    database::redis_function::redis_jobs::{set_job, JobList},
+use shared::{
+    job_functions::Job,
+    redis_jobs::{set_job, JobList},
+    establish_connection,
 };
-use crate::establish_connection;
 use uuid::Uuid; 
 use serde::Serialize;
 

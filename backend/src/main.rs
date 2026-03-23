@@ -1,9 +1,7 @@
 use actix_web::{App, HttpServer, middleware::Logger};
 use std::io::Result;
 mod controller;
-mod database;
-mod schema;
-use crate::database::establish_connection;
+use shared::establish_connection;
 use crate::controller::upload_video;
 
 //create the actix server 
