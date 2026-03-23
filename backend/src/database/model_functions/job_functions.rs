@@ -55,7 +55,6 @@ trait Dbfunctions {
 impl  Job {
    //create the model functions 
   pub fn create(conn: &mut PgConnection, job: &Job) -> Result<Job, diesel::result::Error> {
-
     use crate::schema::jobs;
 
     let new_job = NewJob{
