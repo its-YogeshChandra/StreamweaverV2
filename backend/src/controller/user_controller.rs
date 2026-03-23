@@ -56,27 +56,26 @@ pub async fn upload_video (MultipartForm(form): MultipartForm<UploadVideo>) -> i
     updated_at: None,
    };
 
-   //call the database function (optimise)
-let db_result = Job::create(&mut conn, &job).unwrap();
+    //call the database function (optimise)
+    let db_result = Job::create(&mut conn, &job).unwrap();
 
-//call the redis 
-let job_list = JobList {
-    job_id: db_result.id.to_string(),
-    file_path: db_result.file_path,
-};
+    //call the redis 
+    let job_list = JobList {
+        job_id: db_result.id.to_string(),
+        file_path: db_result.file_path,
+    };
 
-let redis_result = set_job(job_list);
+    let redis_result = set_job(job_list);
 
-if redis_result.success == true {
+    if redis_result.success == true {
 
     let response_payload = Response {
         job_id: db_result.id.to_string(),
         status: "pending".to_string(),
     };
     HttpResponse::Ok().status(StatusCode::from_u16(202).unwrap()).json(response_payload)            
-}else {
-    HttpResponse::InternalServerError().body("Failed to upload video")
-}
-
+    }else {
+        HttpResponse::InternalServerError().body("Failed to upload video")
+    }
 
 }
