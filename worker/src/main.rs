@@ -34,7 +34,7 @@ fn main() {
         let transcript = transcriber(&job.job_id);  // whisper-rs
         let chapters = generate_chapters(&transcript);         // TF-IDF sliding window
         let threat = detect_threats(&transcript);              // Regex + keyword scan
-        let hls_output = transcode_hls(&job.file_path, &threat); // FFmpeg subprocess
+        let hls_output = convert_to_hls(&job.file_path, &threat); // FFmpeg subprocess
         let sprites = generate_sprites(&job.file_path);        // FFmpeg subprocess
 
         // Upload to S3
