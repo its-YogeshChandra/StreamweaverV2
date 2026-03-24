@@ -1,6 +1,6 @@
 //main script file 
 mod utils;
-use crate::utils::ffmpeg_utility::{convert_to_wav, convert_to_hls};
+use crate::utils::ffmpeg_utility::{convert_to_wav, convert_to_hls, generate_sprites};
 use crate::utils::whisper_utility::transcriber;
 use crate::utils::generate_chapters;
 use shared::redis_jobs::{get_job, JobList};
@@ -8,6 +8,9 @@ use shared::database::establish_connection;
 use shared::Job;
 use shared::UpdateJobRequest;
 use uuid::Uuid;
+
+
+
 
 fn main() {
 
@@ -37,16 +40,21 @@ fn main() {
         
         //save threat detection for now                                     // TF-IDF sliding window
         //let threat = detect_threats(&transcript);              // Regex + keyword scan
-        
         let hls_output = convert_to_hls(&job.bitrate, &job.content_length, &job.job_id, &job.file_extension); // FFmpeg subprocess
  
-        let sprites = generate_sprites(&job.file_path);        // FFmpeg subprocess
+        let sprites = generate_sprites(&job.job_id, &job.file_extension);        // FFmpeg subprocess
 
         // Upload to S3
         upload_to_s3(&job.job_id, &hls_output, &chapters, &sprites);
-
+       
+        let job_id :Uuid = job.job_id.parse().unwrap(); 
+        let update_job_request = UpdateJobRequest {
+            job_id: job_id.clone(),
+            status: "completed".to_string(),
+            stage: "completed".to_string(),
+        };      
+        Job::update_job_status(&mut db_conn, update_job_request);
         // Update status
-        db.update_job_status(&job.job_id, "completed");
 
         // Cleanup
         cleanup_local_files(&job.job_id);

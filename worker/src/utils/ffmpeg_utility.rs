@@ -214,16 +214,42 @@ let final_destination = Path::new(vidoutput_dir).join("index.m3u8");
     }
 }
 
-//function to generate sprites
-pub fn generate_sprites(job_id: &str, file_extension: &str){
 
-    //input path 
+//function to generate sprites --
+pub fn generate_sprites(job_id: &str, file_extension: &str) -> Result<(), String> {
+
+//input path 
 let input_path = format!("media/processing/{}.{}", job_id, file_extension);
 
 //output path 
-let output_path = format!("media/output/sprites/{}.{}", job_id,"jpg");
+let output_path = format!("media/output/sprites/{}.{}", job_id,"png");
 
+ let mut sprite_generator = Command::new("ffmpeg");
 
+ //argument for the sprite generator
+ sprite_generator
+ .arg("i")
+ .arg(input_path)
+ .arg("-vf")
+ .arg("fps=1, scale=320:-1, tile=10x10");
 
+ //capture the output 
+ let cmd = sprite_generator
+ .arg(output_path)
+ .stdin(Stdio::piped())
+ .stderr(Stdio::piped())
+ .output(); 
+
+ //match the output 
+ match cmd {
+    Ok(output) => {
+        if output.status.success() {
+            Ok(())
+        } else {
+            Err(String::from_utf8_lossy(&output.stderr).to_string())
+        }
+    }
+    Err(e) => Err(e.to_string()),
+ }
 
 }
