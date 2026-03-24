@@ -2,31 +2,64 @@ use dotenv::dotenv;
 use std::env;
 use reqwest::{self};
 use std::time::Duration;
+use serde_json::json;
 
 //call the google api for generating the chapters out of the vtt file (audio transcript)
-pub async fn generate_chapters(){
+pub async fn generate_chapters(job_id: &str){
 
     //load the .env file 
     dotenv().ok();
 
     //get the api key from the .env file 
-    let api_key = env::var("API_KEY").expect("API_KEY");
+   let api_key = env::var("API_KEY").expect("API_KEY");
 
     //call the google api 
-  let base_url = std::env::var("API_URL").expect("API_URL issue"); 
+  let base_url = std::env::var("API_URL").expect("API_URL issue");
+  let model_name = std::env::var("MODEL_NAME").expect("MODEL_NAME issue");
   
+  //create the target url
+  let target_url = format!(
+    "{}{}:generateContent?key={}",
+    base_url,
+    model_name,
+    api_key
+  );
+   
+   //read the file for the system instruction
+   let system_instruction_path = "system_instruction.txt";
+   let system_instruction = std::fs::read_to_string(system_instruction_path).expect("failed to read system instruction");
+
+
+  //give the path to the output dir
+  let path = "media/output/chapters";
+  let output_path = format!("{}/{}.json", path, job_id);
+
    //build the http client 
    let client = reqwest::Client::builder().timeout(Duration::from_secs(60)).build().expect("failed to build http client");
 
    //construct the message
-   
-  //have to give the model name 
-  let model_name = "gemini-2.5-flash";
+  let payload = json!({
+    "systemInstruction": {
+        "parts": [{
+            "text": ""
+        }]
+    }, 
+    "contents": [{
+        "parts": [{
+            "text": ""
+        }]
+    }], 
+    "generationConfig": {
+        "response_mime_type": "application/json",
+        "temperature": 0.4,
+    }
+  });
+  
 
    //send the request to the client 
    let response = 
    client
-   .post(base_url)
+   .post(target_url)
    .header("Content-Type", "application/json")
    .header("Authorization", format!("Bearer {}", api_key))
    .json(&payload)
@@ -34,5 +67,14 @@ pub async fn generate_chapters(){
    .await
    .expect("failed to send request");
 
-   
+  //parse the json response 
+  let response_json : serde_json::Value = response.json().await.unwrap();
+
+  if let Some(text) = response_json["candidates"][0]["content"]["parts"][0]["text"].as_str() {
+   //save the output in the output file  
+    std::fs::write(output_path, text).expect("failed to write to file");
+ }
+  else {
+  }
+
 }
