@@ -23,16 +23,15 @@ fn main() {
         //create the update job request payload 
         let job_id :Uuid = job.job_id.parse().unwrap(); 
         let update_job_request = UpdateJobRequest {
-            job_id: job_id,
+            job_id: job_id.clone(),
             status: "processing".to_string(),
             stage: "extracting audio".to_string(),
         };      
         Job::update_job_status(&mut db_conn, update_job_request);
 
         // 6-stage pipeline
-        let audio_path = convert_to_wav(&job.file_path);   
-            // FFmpeg subprocess
-        let transcript = transcriber(&audio_path);              // whisper-rs
+        let audio_path = convert_to_wav(&job.job_id, &job.file_extension); // FFmpeg subprocess
+        let transcript = transcriber(&job.job_id);  // whisper-rs
         let chapters = generate_chapters(&transcript);         // TF-IDF sliding window
         let threat = detect_threats(&transcript);              // Regex + keyword scan
         let hls_output = transcode_hls(&job.file_path, &threat); // FFmpeg subprocess

@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub struct JobList {
     pub job_id: String,
-    pub file_path : String,
+    pub file_extension: String,
 }
 
 pub struct RedisResponse {

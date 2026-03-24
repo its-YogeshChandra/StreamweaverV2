@@ -58,11 +58,17 @@ pub async fn upload_video (MultipartForm(form): MultipartForm<UploadVideo>) -> i
 
     //call the database function (optimise)
     let db_result = Job::create(&mut conn, &job).unwrap();
+    
+    //update the name of the video to the id from the database
+     //read the extension of the file
+    let extension = db_result.file_path.split('.').last().unwrap();
+    let new_file_path = format!("media/input/{}.{}", db_result.id.to_string(), extension);
+    std::fs::rename(&db_result.file_path, &new_file_path).unwrap();
 
     //call the redis 
     let job_list = JobList {
         job_id: db_result.id.to_string(),
-        file_path: db_result.file_path,
+        file_extension: extension.to_string(),
     };
 
     let redis_result = set_job(job_list);

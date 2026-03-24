@@ -1,45 +1,49 @@
 use std::process::{Command, Stdio};
 use std::path::Path;
 
-pub fn convert_to_wav(input_path: &str, job_id: &str) -> Result<(), String> {
-//output directory  
-let path = "media/output/";
+pub fn convert_to_wav( job_id: &str, file_extension: &str) -> Result<(), String> {
 
-//name for the output file 
-let output_file_name = format!("{}{}{}",path, job_id, ".wav");
+    //read the input file using the job id 
+    let input_path = format!("media/input/{}.{}", job_id, file_extension);
 
-//create the process command (optimize) 
-let mut ffmpeg_mod = Command::new("ffmpeg");
+    //output directory  
+    let path = "media/processing/";
 
-//create the option for the ffmpeg 
-let options = [
-    "-ar", "16000",
-    "-ac", "1",
-    "-acodec", "pcm_s16le",
-];
+    //name for the output file 
+    let output_file_name = format!("{}{}{}",path, job_id, ".wav");
 
-//call the ffmpeg command to convert the audio to wav format 
-ffmpeg_mod
- .arg("-i")
- .arg(input_path)
- .args(&options)
- .arg(output_file_name)
- .output();
+    //create the process command (optimize) 
+    let mut ffmpeg_mod = Command::new("ffmpeg");
 
-//capture the output 
-let cmd = ffmpeg_mod.stdout(Stdio::piped()).stderr(Stdio::piped()).output();
+    //create the option for the ffmpeg 
+    let options = [
+        "-ar", "16000",
+        "-ac", "1",
+        "-acodec", "pcm_s16le",
+    ];
 
-//match the cmd 
-match cmd {
-    Ok(output) => {
-        if output.status.success() {
-            Ok(())
-        } else {
-            Err(String::from_utf8_lossy(&output.stderr).to_string())
+    //call the ffmpeg command to convert the audio to wav format 
+    ffmpeg_mod
+    .arg("-i")
+    .arg(input_path)
+    .args(&options)
+    .arg(output_file_name)
+    .output();
+
+    //capture the output 
+    let cmd = ffmpeg_mod.stdout(Stdio::piped()).stderr(Stdio::piped()).output();
+
+    //match the cmd 
+    match cmd {
+        Ok(output) => {
+            if output.status.success() {
+                Ok(())
+            } else {
+                Err(String::from_utf8_lossy(&output.stderr).to_string())
+            }
         }
+        Err(e) => Err(e.to_string()),
     }
-    Err(e) => Err(e.to_string()),
-}
 
 }
 
@@ -118,14 +122,11 @@ impl VideoConfig {
 
 
 //convert the video to the hls stream 
-pub fn convert_to_hls(input_path: &str, output_path: &str, bitrate: &str, content_length: &str, video_path: &str) -> Result<(), String> {
+pub fn convert_to_hls( bitrate: &str, content_length: &str, video_path: &str) -> Result<(), String> {
 
 //the output directory 
 let vidoutput_dir = "media/output";
 let final_destination = Path::new(vidoutput_dir).join("index.m3u8"); 
-
-//create the process command
-let mut ffmpeg_mod = Command::new("ffmpeg");
 
   //call the ffmpeg on video
     let options = [
@@ -194,7 +195,8 @@ let mut ffmpeg_mod = Command::new("ffmpeg");
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output();
-    
+
+   //match cmd 
     match cmd {
         Ok(output) => {
             if output.status.success() {
