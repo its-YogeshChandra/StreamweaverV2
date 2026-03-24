@@ -1,9 +1,12 @@
-use diesel::prelude::*;
+use diesel::{prelude::*};
 use diesel::pg::PgConnection;
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
-//create the respective struct for the job 
 
+use crate::schema;
+
+
+//create the respective struct for the job 
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::jobs)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -50,6 +53,21 @@ trait _Dbfunctions {
  //fn update(&mut self , conn: &mut PgConnection) -> Result<Job, diesel::result::Error>;    
  //fn findbyid (conn: &mut PgConnection, id: Uuid) -> Result<Job, diesel::result::Error>;
 }
+//function to update the job status 
+pub struct UpdateJobRequest {
+    pub job_id: Uuid,
+    pub status : String,
+    pub stage : String,
+}
+
+/// Changeset struct for writing the on-chain USDC ATA pubkey back to the user row.
+#[derive(AsChangeset)]
+#[diesel(table_name = crate::schema::jobs)]
+pub struct UpdateJobStatus {
+    pub id: Uuid,
+    pub status : String,
+    pub stage : String,
+}
 
 //creating the related datbase function
 impl  Job {
@@ -57,6 +75,7 @@ impl  Job {
   pub fn create(conn: &mut PgConnection, job: &Job) -> Result<Job, diesel::result::Error> {
     use crate::schema::jobs;
 
+    //create the new job 
     let new_job = NewJob{
         id: job.id,
         api_key_id: job.api_key_id,
@@ -72,12 +91,30 @@ impl  Job {
         error_message: job.error_message.clone(),
     };
 
-    //insert it into the postgres 
+  //query database to update the job status 
     let result = diesel::insert_into(jobs::table)
         .values(&new_job)
         .returning(Job::as_returning())
         .get_result(conn)?;
 
     Ok(result)
+}
+
+//update the job 
+pub fn update_job_status (conn: &mut PgConnection, job: UpdateJobRequest) -> Result<Job, diesel::result::Error>{
+    use crate::schema::jobs::dsl::*;
+    
+   let change_set = UpdateJobStatus{
+    id: job.job_id,
+    status: job.status,
+    stage: job.stage,
+   };
+  
+  //query database to update the job status 
+   let result = diesel::update(jobs.filter(id.eq(job.job_id))).set(&change_set).get_result(conn)?;
+ 
+  //for further optimization 
+  //use match statement to handle the database query
+   Ok(result)
 }
 }

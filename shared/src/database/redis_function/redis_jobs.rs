@@ -37,6 +37,7 @@ pub fn set_job(payload: JobList) -> RedisResponse{
      }
 }
 
+
 pub fn get_job() -> Option<JobList> {
     let client = redis::Client::open("redis://127.0.0.1:6379/").unwrap();
     let mut con = client.get_connection().unwrap();
@@ -56,3 +57,4 @@ pub fn get_job() -> Option<JobList> {
         Err(_) => None,
     }
 }
+
