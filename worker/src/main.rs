@@ -3,10 +3,14 @@ mod utils;
 use crate::utils::ffmpeg_utility::{convert_to_wav, convert_to_hls};
 use crate::utils::whisper_utility::transcribe;
 use shared::redis_jobs::{get_job, JobList};
+use shared::database::establish_connection;
+use shared::Job;
+use shared::UpdateJobRequest;
+
 fn main() {
 
     //connect to the database 
-    let db = connect_postgres();
+    let mut db_conn = establish_connection().unwrap();
 
     //loop constantly 
     loop {
@@ -15,7 +19,14 @@ fn main() {
         let job: JobList = get_job().unwrap(); 
         
         // Update status
-        db.update_job_status(&job.job_id, "processing");
+        //create the update job request payload 
+        let update_job_request = UpdateJobRequest {
+            job_id: job.job_id,
+            status: "processing".to_string(),
+            stage: "extracting audio".to_string(),
+        };
+        
+        Job::update_job_status(&mut db_conn, update_job_request);
 
         // 6-stage pipeline
         let audio_path = extract_audio(&job.file_path);       // FFmpeg subprocess
