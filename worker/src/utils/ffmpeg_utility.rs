@@ -122,7 +122,10 @@ impl VideoConfig {
 
 
 //convert the video to the hls stream 
-pub fn convert_to_hls( bitrate: &str, content_length: &str, video_path: &str) -> Result<(), String> {
+pub fn convert_to_hls( bitrate: &str, content_length: &str, job_id: &str, file_extension: &str) -> Result<(), String> {
+
+//input file 
+let input_path_file = format!("media/processing/{}.{}", job_id, file_extension);
 
 //the output directory 
 let vidoutput_dir = "media/output";
@@ -183,7 +186,7 @@ let final_destination = Path::new(vidoutput_dir).join("index.m3u8");
 
     video_chunker
         .arg("-i")
-        .arg(video_path)
+        .arg(input_path_file)
         .arg("-c:v")
         .arg("libx264")
         .arg("-c:a")
@@ -209,4 +212,18 @@ let final_destination = Path::new(vidoutput_dir).join("index.m3u8");
         }
         Err(e) => Err(e.to_string()),
     }
+}
+
+//function to generate sprites
+pub fn generate_sprites(job_id: &str, file_extension: &str){
+
+    //input path 
+let input_path = format!("media/processing/{}.{}", job_id, file_extension);
+
+//output path 
+let output_path = format!("media/output/sprites/{}.{}", job_id,"jpg");
+
+
+
+
 }

@@ -1,7 +1,7 @@
 use actix_web::{
     HttpResponse, Responder, http::StatusCode, post
 };
-use actix_multipart::form::{MultipartForm, tempfile::TempFile};
+use actix_multipart::form::{MultipartForm, tempfile::TempFile, text::Text};
 use shared::{
     job_functions::Job,
     redis_jobs::{set_job, JobList},
@@ -14,6 +14,8 @@ use serde::Serialize;
 pub struct UploadVideo {
     #[multipart(limit = "100mb")]
     video: TempFile,
+    bitrate: Text<String>,
+    content_length: Text<String>,
 }
 
 #[derive(Serialize)]
@@ -69,6 +71,8 @@ pub async fn upload_video (MultipartForm(form): MultipartForm<UploadVideo>) -> i
     let job_list = JobList {
         job_id: db_result.id.to_string(),
         file_extension: extension.to_string(),
+        bitrate: form.bitrate.to_string(),
+        content_length: form.content_length.to_string(),
     };
 
     let redis_result = set_job(job_list);

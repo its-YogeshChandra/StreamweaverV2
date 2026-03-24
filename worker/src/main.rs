@@ -2,6 +2,7 @@
 mod utils;
 use crate::utils::ffmpeg_utility::{convert_to_wav, convert_to_hls};
 use crate::utils::whisper_utility::transcriber;
+use crate::utils::generate_chapters;
 use shared::redis_jobs::{get_job, JobList};
 use shared::database::establish_connection;
 use shared::Job;
@@ -32,9 +33,13 @@ fn main() {
         // 6-stage pipeline
         let audio_path = convert_to_wav(&job.job_id, &job.file_extension); // FFmpeg subprocess
         let transcript = transcriber(&job.job_id);  // whisper-rs
-        let chapters = generate_chapters(&transcript);         // TF-IDF sliding window
-        let threat = detect_threats(&transcript);              // Regex + keyword scan
-        let hls_output = convert_to_hls(&job.file_path, &threat); // FFmpeg subprocess
+        let chapters = generate_chapters(&job.job_id);   
+        
+        //save threat detection for now                                     // TF-IDF sliding window
+        //let threat = detect_threats(&transcript);              // Regex + keyword scan
+        
+        let hls_output = convert_to_hls(&job.bitrate, &job.content_length, &job.job_id, &job.file_extension); // FFmpeg subprocess
+ 
         let sprites = generate_sprites(&job.file_path);        // FFmpeg subprocess
 
         // Upload to S3

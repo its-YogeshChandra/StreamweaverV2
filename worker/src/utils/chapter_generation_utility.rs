@@ -26,14 +26,16 @@ pub async fn generate_chapters(job_id: &str){
   );
    
    //read the file for the system instruction
-   let system_instruction_path = "system_instruction.txt";
-   let system_instruction = std::fs::read_to_string(system_instruction_path).expect("failed to read system instruction");
-
-
+   let system_instruction = std::env::var("SYSTEM_PROMPT").expect("SYSTEM_PROMPT issue").to_string(); 
+      
   //give the path to the output dir
   let path = "media/output/chapters";
   let output_path = format!("{}/{}.json", path, job_id);
-
+  
+  //read the content payload
+   let content_payload_path = format!("media/process/transcript/{}.vtt", job_id); 
+   let content_payload = std::fs::read_to_string(content_payload_path).expect("failed to read content payload");
+   
    //build the http client 
    let client = reqwest::Client::builder().timeout(Duration::from_secs(60)).build().expect("failed to build http client");
 
@@ -41,12 +43,12 @@ pub async fn generate_chapters(job_id: &str){
   let payload = json!({
     "systemInstruction": {
         "parts": [{
-            "text": ""
+            "text": system_instruction
         }]
     }, 
     "contents": [{
         "parts": [{
-            "text": ""
+            "text": content_payload
         }]
     }], 
     "generationConfig": {
@@ -54,7 +56,6 @@ pub async fn generate_chapters(job_id: &str){
         "temperature": 0.4,
     }
   });
-  
 
    //send the request to the client 
    let response = 
