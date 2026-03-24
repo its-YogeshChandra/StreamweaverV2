@@ -1,11 +1,12 @@
 //main script file 
 mod utils;
 use crate::utils::ffmpeg_utility::{convert_to_wav, convert_to_hls};
-use crate::utils::whisper_utility::transcribe;
+use crate::utils::whisper_utility::transcriber;
 use shared::redis_jobs::{get_job, JobList};
 use shared::database::establish_connection;
 use shared::Job;
 use shared::UpdateJobRequest;
+use uuid::Uuid;
 
 fn main() {
 
@@ -20,17 +21,18 @@ fn main() {
         
         // Update status
         //create the update job request payload 
+        let job_id :Uuid = job.job_id.parse().unwrap(); 
         let update_job_request = UpdateJobRequest {
-            job_id: job.job_id,
+            job_id: job_id,
             status: "processing".to_string(),
             stage: "extracting audio".to_string(),
-        };
-        
+        };      
         Job::update_job_status(&mut db_conn, update_job_request);
 
         // 6-stage pipeline
-        let audio_path = extract_audio(&job.file_path);       // FFmpeg subprocess
-        let transcript = transcribe(&audio_path);              // whisper-rs
+        let audio_path = convert_to_wav(&job.file_path);   
+            // FFmpeg subprocess
+        let transcript = transcriber(&audio_path);              // whisper-rs
         let chapters = generate_chapters(&transcript);         // TF-IDF sliding window
         let threat = detect_threats(&transcript);              // Regex + keyword scan
         let hls_output = transcode_hls(&job.file_path, &threat); // FFmpeg subprocess

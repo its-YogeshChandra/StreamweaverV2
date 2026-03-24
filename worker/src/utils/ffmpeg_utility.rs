@@ -1,29 +1,32 @@
 use std::process::{Command, Stdio};
 use std::path::Path;
 
-pub fn convert_to_wav(input_path: &str, output_path: &str) -> Result<(), String> {
+pub fn convert_to_wav(input_path: &str, job_id: &str) -> Result<(), String> {
 //output directory  
+let path = "media/output/";
 
+//name for the output file 
+let output_file_name = format!("{}{}{}",path, job_id, ".wav");
 
 //create the process command (optimize) 
 let mut ffmpeg_mod = Command::new("ffmpeg");
 
-//crete the option for the ffmpeg 
+//create the option for the ffmpeg 
 let options = [
     "-ar", "16000",
     "-ac", "1",
     "-acodec", "pcm_s16le",
 ];
 
-
 //call the ffmpeg command to convert the audio to wav format 
 ffmpeg_mod
  .arg("-i")
  .arg(input_path)
  .args(&options)
- .arg(output_path)
+ .arg(output_file_name)
  .output();
 
+//capture the output 
 let cmd = ffmpeg_mod.stdout(Stdio::piped()).stderr(Stdio::piped()).output();
 
 //match the cmd 

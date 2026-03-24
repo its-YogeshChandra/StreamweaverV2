@@ -48,11 +48,13 @@ pub struct NewJob {
 
 
 
-trait _Dbfunctions {
+//trait _Dbfunctions {
 //fn create( conn: &mut PgConnection, job: &Job ) -> Result<Job, diesel::result::Error>;
  //fn update(&mut self , conn: &mut PgConnection) -> Result<Job, diesel::result::Error>;    
  //fn findbyid (conn: &mut PgConnection, id: Uuid) -> Result<Job, diesel::result::Error>;
-}
+//}
+
+
 //function to update the job status 
 pub struct UpdateJobRequest {
     pub job_id: Uuid,

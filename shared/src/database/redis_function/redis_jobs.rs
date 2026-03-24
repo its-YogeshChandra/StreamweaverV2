@@ -13,6 +13,7 @@ pub struct RedisResponse {
 }
 
 pub fn set_job(payload: JobList) -> RedisResponse{
+
     let client = redis::Client::open("redis://127.0.0.1:6379/").unwrap();
     //get a conneciton from the client 
     let mut con = client.get_connection().unwrap();
