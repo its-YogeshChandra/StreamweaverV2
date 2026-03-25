@@ -45,7 +45,7 @@ fn main() {
         let sprites = generate_sprites(&job.job_id, &job.file_extension);        // FFmpeg subprocess
 
         // Upload to S3
-        upload_to_s3(&job.job_id, &hls_output, &chapters, &sprites);
+        upload_to_cloud(&job.job_id, &hls_output, &chapters, &sprites);
        
         let job_id :Uuid = job.job_id.parse().unwrap(); 
         let update_job_request = UpdateJobRequest {
