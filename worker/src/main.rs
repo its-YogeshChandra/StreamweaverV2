@@ -11,8 +11,8 @@ use uuid::Uuid;
 
 
 
-
-fn main() {
+#[::tokio::main]
+async fn main() {
 
     //connect to the database 
     let mut db_conn = establish_connection().unwrap();
