@@ -1,8 +1,6 @@
-
-
+use std::fs;
 
 //cloudflare r2 for the bucket  
-
 pub async fn upload_to_cloud(job_id: &str) -> Result<(), String> {
     //get the hls output
     let hls_output_path = "media/output/video";
@@ -21,8 +19,10 @@ pub async fn upload_to_cloud(job_id: &str) -> Result<(), String> {
     for path in paths {
        //read the file from each path 
             //read the file whose name match the job id
-       let file = tokio::fs::read_dir(path).into_iter().filter(|x| x.file_name() == job_id).next().unwrap(); 
+       let all_file = tokio::fs::read_dir(path).await.expect("failed to read dir");
 
+       let entries = fs::read_dir(path).unwrap(); 
+       
        //upload it into the cloud 
        let result = client.complete_multipart_upload().bucket(input).send().await;
        
@@ -37,6 +37,8 @@ pub async fn upload_to_cloud(job_id: &str) -> Result<(), String> {
         }
 
     }
+
+    Ok(())
 
 }
 
