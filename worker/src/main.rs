@@ -3,6 +3,8 @@ mod utils;
 use crate::utils::ffmpeg_utility::{convert_to_wav, convert_to_hls, generate_sprites};
 use crate::utils::whisper_utility::transcriber;
 use crate::utils::generate_chapters;
+use crate::utils::upload_to_cloud;
+use crate::utils::cleanup_local_files;
 use shared::redis_jobs::{get_job, JobList};
 use shared::database::establish_connection;
 use shared::Job;
@@ -45,7 +47,7 @@ async fn main() {
         let sprites = generate_sprites(&job.job_id, &job.file_extension);        // FFmpeg subprocess
 
         // Upload to S3
-        upload_to_cloud(&job.job_id, &hls_output, &chapters, &sprites);
+        upload_to_cloud(&job.job_id).await.unwrap();
        
         let job_id :Uuid = job.job_id.parse().unwrap(); 
         let update_job_request = UpdateJobRequest {
