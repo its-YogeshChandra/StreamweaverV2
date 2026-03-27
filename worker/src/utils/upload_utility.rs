@@ -47,7 +47,7 @@ pub async fn upload_to_cloud(job_id: &str) -> Result<(), String> {
                 main_file.read_to_end(&mut file_buffer).await.unwrap();
                 let body_stream = ByteStream::from(file_buffer); 
 
-                //construct the s3 key: job_id/category/filename
+                //construct the s3 key: job_id/category
                 let s3_key = format!("{}/{}/{}", job_id, path, filename);
 
                 //the result of the client 

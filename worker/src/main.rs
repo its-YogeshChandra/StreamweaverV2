@@ -4,7 +4,6 @@ use crate::utils::ffmpeg_utility::{convert_to_wav, convert_to_hls, generate_spri
 use crate::utils::whisper_utility::transcriber;
 use crate::utils::generate_chapters;
 use crate::utils::upload_to_cloud;
-use crate::utils::cleanup_local_files;
 use shared::redis_jobs::{get_job, JobList};
 use shared::database::establish_connection;
 use shared::Job;
@@ -54,10 +53,11 @@ async fn main() {
             job_id: job_id.clone(),
             status: "completed".to_string(),
             stage: "completed".to_string(),
-        };      
-        Job::update_job_status(&mut db_conn, update_job_request);
-        // Update status
+        };     
 
+        //update the job  
+        Job::update_job_status(&mut db_conn, update_job_request);
+        
         // Cleanup
         cleanup_local_files(&job.job_id);
     }
