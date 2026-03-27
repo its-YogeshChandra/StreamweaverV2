@@ -3,6 +3,7 @@ use tokio::io::AsyncReadExt;
 use aws_sdk_s3::primitives::ByteStream;
 use dotenv::dotenv;
 use std::env;
+
 //cloudflare r2 for the bucket  
 pub async fn upload_to_cloud(job_id: &str) -> Result<(), String> {
     dotenv().ok();
@@ -68,8 +69,6 @@ pub async fn upload_to_cloud(job_id: &str) -> Result<(), String> {
                 //throw the error if no file is present 
             }
         }
-       
-       
 
  }
 

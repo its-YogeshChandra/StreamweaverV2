@@ -1,5 +1,5 @@
-//main script file 
 mod utils;
+//import the functions from the utils module 
 use crate::utils::ffmpeg_utility::{convert_to_wav, convert_to_hls, generate_sprites};
 use crate::utils::whisper_utility::transcriber;
 use crate::utils::generate_chapters;
@@ -15,13 +15,11 @@ use uuid::Uuid;
 
 #[::tokio::main]
 async fn main() {
-
     //connect to the database 
     let mut db_conn = establish_connection().unwrap();
 
     //loop constantly 
     loop {
-        
         // Blocking pop — waits for next job (optimize)
         let job: JobList = get_job().unwrap(); 
         
@@ -37,18 +35,17 @@ async fn main() {
         Job::update_job_status(&mut db_conn, update_job_request).unwrap();
         
         // 6-stage pipeline
-        let audio_path = convert_to_wav(&job.job_id, &job.file_extension).unwrap(); // FFmpeg subprocess
-        let transcript = transcriber(&job.job_id).unwrap();  // whisper-rs
-        let chapters = generate_chapters(&job.job_id);   
+        convert_to_wav(&job.job_id, &job.file_extension).unwrap(); // FFmpeg subprocess
+        transcriber(&job.job_id).unwrap();  // whisper-rs
+        generate_chapters(&job.job_id).await;   
         
         //let threat = detect_threats(&transcript);              // Regex + keyword scan
-        let hls_output = convert_to_hls(&job.bitrate, &job.content_length, &job.job_id, &job.file_extension).unwrap(); // FFmpeg subprocess
+        convert_to_hls(&job.bitrate, &job.content_length, &job.job_id, &job.file_extension).unwrap(); // FFmpeg subprocess
  
-        let sprites = generate_sprites(&job.job_id, &job.file_extension).unwrap();        // FFmpeg subprocess
+        generate_sprites(&job.job_id, &job.file_extension).unwrap();        // FFmpeg subprocess
 
         // Upload to S3
         upload_to_cloud(&job.job_id).await.unwrap();
-       
         let job_id :Uuid = job.job_id.parse().unwrap(); 
         let update_job_request = UpdateJobRequest {
             job_id: job_id.clone(),
