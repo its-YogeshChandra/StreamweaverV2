@@ -27,19 +27,30 @@ pub async fn file_cleaner_utility(job_id: &str) -> Result<(), String> {
         if file_path.is_file(){
             if let Some(filename) = file_path.file_name().and_then(|f| f.to_str()) {
                if filename.contains(job_id){
+                //print the file path 
+                println!("deleting_file :{}", filename);
+                
                 //remove the file from the dir 
-                fs::remove_file(&file_path).await.unwrap();
+                let result = fs::remove_file(&file_path).await;
 
+                match result {
+                    Ok(_) => {
+                        //print the deleted successfully 
+                        println!("file deleted successfully");
+                    }
+                    Err(e) => {
+                        //print the error successfully
+                        println!("file deletion failed: {}", e);
+                    }
+                }
                } 
             }
             else{
                 //throw the error if no file is present 
+                println!("no file found");
             }
         }
-       
-       
-
- }
+    }
 
     }
     Ok(())
