@@ -32,7 +32,7 @@ pub async fn upload_video (MultipartForm(form): MultipartForm<UploadVideo>) -> i
    let file_name = form.video.file_name.unwrap().to_string();
       println!("File name: {}", file_name);
    
-  let destination_folder = format!("public/{}", file_name.clone());
+  let destination_folder = format!("../media/input/{}", file_name.clone());
 
    //write the video into the destination folder (optimise)
    form.video.file.persist(&destination_folder).unwrap(); 
@@ -60,11 +60,13 @@ pub async fn upload_video (MultipartForm(form): MultipartForm<UploadVideo>) -> i
 
     //call the database function (optimise)
     let db_result = Job::create(&mut conn, &job).unwrap();
+
+    println!("db_result: {}", db_result.file_path); 
     
     //update the name of the video to the id from the database
      //read the extension of the file
     let extension = db_result.file_path.split('.').last().unwrap();
-    let new_file_path = format!("media/input/{}.{}", db_result.id.to_string(), extension);
+    let new_file_path = format!("..media/input/{}.{}", db_result.id.to_string(), extension);
     std::fs::rename(&db_result.file_path, &new_file_path).unwrap();
 
     //call the redis 
