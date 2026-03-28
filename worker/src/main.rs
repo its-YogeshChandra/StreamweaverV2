@@ -15,11 +15,12 @@ use uuid::Uuid;
 
 #[::tokio::main]
 async fn main() {
-    //connect to the database 
-    let mut db_conn = establish_connection().unwrap();
 
     //loop constantly 
     loop {
+     //connect to the database 
+        let mut db_conn = establish_connection().unwrap();
+   
         // Blocking pop — waits for next job (optimize)
         let job: JobList = get_job().unwrap(); 
         

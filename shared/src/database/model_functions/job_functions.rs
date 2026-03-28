@@ -53,6 +53,7 @@ pub struct NewJob {
 
 
 //function to update the job status 
+#[derive(Debug)]
 pub struct UpdateJobRequest {
     pub job_id: Uuid,
     pub status : String,
@@ -102,7 +103,10 @@ impl  Job {
 //update the job 
 pub fn update_job_status (conn: &mut PgConnection, job: UpdateJobRequest) -> Result<Job, diesel::result::Error>{
     use crate::schema::jobs::dsl::*;
-    
+
+   //print the received payload 
+   println!("Received payload: {:?}", job);
+
    let change_set = UpdateJobStatus{
     id: job.job_id,
     status: job.status,
@@ -112,7 +116,6 @@ pub fn update_job_status (conn: &mut PgConnection, job: UpdateJobRequest) -> Res
   //query database to update the job status 
    let result = diesel::update(jobs.filter(id.eq(job.job_id))).set(&change_set).get_result(conn)?;
  
-  //for further optimization 
   //use match statement to handle the database query
    Ok(result)
 }

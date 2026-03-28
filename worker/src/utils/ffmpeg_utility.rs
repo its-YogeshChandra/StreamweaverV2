@@ -4,10 +4,10 @@ use std::path::Path;
 pub fn convert_to_wav( job_id: &str, file_extension: &str) -> Result<(), String> {
 
     //read the input file using the job id 
-    let input_path = format!("media/input/{}.{}", job_id, file_extension);
+    let input_path = format!("../media/input/{}.{}", job_id, file_extension);
 
     //output directory  
-    let path = "media/processing/";
+    let path = "../media/processing/";
 
     //name for the output file 
     let output_file_name = format!("{}{}{}",path, job_id, ".wav");
@@ -126,10 +126,10 @@ impl VideoConfig {
 pub fn convert_to_hls( bitrate: &str, content_length: &str, job_id: &str, file_extension: &str) -> Result<(), String> {
 
 //input file 
-let input_path_file = format!("media/processing/{}.{}", job_id, file_extension);
+let input_path_file = format!("../media/processing/{}.{}", job_id, file_extension);
 
 //the output directory 
-let vidoutput_dir = "media/output";
+let vidoutput_dir = "../media/output";
 let final_destination = Path::new(vidoutput_dir).join("index.m3u8"); 
 
   //call the ffmpeg on video
