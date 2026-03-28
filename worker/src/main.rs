@@ -38,7 +38,9 @@ async fn main() {
         // 6-stage pipeline
         convert_to_wav(&job.job_id, &job.file_extension).unwrap(); // FFmpeg subprocess
         transcriber(&job.job_id).await.unwrap();  // whisper-server HTTP call
-        generate_chapters(&job.job_id).await;   
+        if let Err(e) = generate_chapters(&job.job_id).await {
+            eprintln!("[main] chapter generation failed for job {}: {}", &job.job_id, e);
+        }
         
         //let threat = detect_threats(&transcript);              // Regex + keyword scan
         convert_to_hls(&job.bitrate, &job.content_length, &job.job_id, &job.file_extension).unwrap(); // FFmpeg subprocess

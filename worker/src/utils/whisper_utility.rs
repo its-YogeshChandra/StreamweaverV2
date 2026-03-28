@@ -17,10 +17,10 @@ pub async fn transcriber(job_id: &str) -> Result<(), String> {
     let inference_url = format!("{}/inference", whisper_url);
 
     // input WAV file path
-    let input_path = format!("../media/processing/{}.wav", job_id);
+    let input_path = format!("../media/processing/audio/{}.wav", job_id);
 
     // output VTT file path
-    let output_dir = "../media/processing/transcription";
+    let output_dir = "../media/processing/transcript";
     let output_path = format!("{}/{}.vtt", output_dir, job_id);
 
     // ensure the output directory exists

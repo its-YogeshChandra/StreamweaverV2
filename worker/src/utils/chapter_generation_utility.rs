@@ -5,17 +5,17 @@ use std::time::Duration;
 use serde_json::json;
 
 //call the google api for generating the chapters out of the vtt file (audio transcript)
-pub async fn generate_chapters(job_id: &str){
+pub async fn generate_chapters(job_id: &str) -> Result<(), String> {
 
     //load the .env file 
     dotenv().ok();
 
     //get the api key from the .env file 
-   let api_key = env::var("API_KEY").expect("API_KEY");
+   let api_key = env::var("API_KEY").map_err(|_| "API_KEY not set".to_string())?;
 
     //call the google api 
-  let base_url = std::env::var("API_URL").expect("API_URL issue");
-  let model_name = std::env::var("MODEL_NAME").expect("MODEL_NAME issue");
+  let base_url = std::env::var("API_URL").map_err(|_| "API_URL not set".to_string())?;
+  let model_name = std::env::var("MODEL_NAME").map_err(|_| "MODEL_NAME not set".to_string())?;
   
   //create the target url
   let target_url = format!(
@@ -26,18 +26,24 @@ pub async fn generate_chapters(job_id: &str){
   );
    
    //read the file for the system instruction
-   let system_instruction = std::env::var("SYSTEM_PROMPT").expect("SYSTEM_PROMPT issue").to_string(); 
+   let system_instruction = std::fs::read_to_string("../config/chapter_system_prompt.txt")
+       .map_err(|e| format!("failed to read chapter_system_prompt.txt: {}", e))?;
       
   //give the path to the output dir
-  let path = "media/output/chapters";
-  let output_path = format!("{}/{}.json", path, job_id);
+  let path = "../media/output/chapters";
+  std::fs::create_dir_all(path).map_err(|e| format!("failed to create output/chapters directory: {}", e))?;
+  let output_path = format!("{}/{}.text", path, job_id);
   
   //read the content payload
-   let content_payload_path = format!("media/process/transcript/{}.vtt", job_id); 
-   let content_payload = std::fs::read_to_string(content_payload_path).expect("failed to read content payload");
+   let content_payload_path = format!("../media/processing/transcript/{}.vtt", job_id); 
+   let content_payload = std::fs::read_to_string(&content_payload_path)
+       .map_err(|e| format!("failed to read VTT file {}: {}", content_payload_path, e))?;
    
    //build the http client 
-   let client = reqwest::Client::builder().timeout(Duration::from_secs(60)).build().expect("failed to build http client");
+   let client = reqwest::Client::builder()
+       .timeout(Duration::from_secs(60))
+       .build()
+       .map_err(|e| format!("failed to build http client: {}", e))?;
 
    //construct the message
   let payload = json!({
@@ -52,7 +58,7 @@ pub async fn generate_chapters(job_id: &str){
         }]
     }], 
     "generationConfig": {
-        "response_mime_type": "application/json",
+        "response_mime_type": "text/plain",
         "temperature": 0.4,
     }
   });
@@ -66,16 +72,26 @@ pub async fn generate_chapters(job_id: &str){
    .json(&payload)
    .send()
    .await
-   .expect("failed to send request");
+   .map_err(|e| format!("Gemini request failed: {}", e))?;
 
-  //parse the json response 
-  let response_json : serde_json::Value = response.json().await.unwrap();
+  //parse the json response
+  let response_json: serde_json::Value = response
+      .json()
+      .await
+      .map_err(|e| format!("failed to parse Gemini response: {}", e))?;
 
   if let Some(text) = response_json["candidates"][0]["content"]["parts"][0]["text"].as_str() {
-   //save the output in the output file  
-    std::fs::write(output_path, text).expect("failed to write to file");
- }
-  else {
+      //save the output in the output file
+      std::fs::write(&output_path, text)
+          .map_err(|e| format!("failed to write chapters to {}: {}", output_path, e))?;
+      println!("chapters saved to {}", output_path);
+  } else {
+      // Print the full response so you can debug what Gemini actually returned
+      eprintln!("[chapter_generation] unexpected Gemini response structure for job {}:", job_id);
+      eprintln!("{}", serde_json::to_string_pretty(&response_json).unwrap_or_else(|_| response_json.to_string()));
+      return Err(format!("Gemini did not return expected text field for job {}", job_id));
   }
+
+  Ok(())
 
 }

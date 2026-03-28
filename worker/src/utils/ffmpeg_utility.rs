@@ -7,7 +7,7 @@ pub fn convert_to_wav( job_id: &str, file_extension: &str) -> Result<(), String>
     let input_path = format!("../media/input/{}.{}", job_id, file_extension);
 
     //output directory  
-    let path = "../media/processing/";
+    let path = "../media/processing/audio/";
 
     //name for the output file 
     let output_file_name = format!("{}{}{}",path, job_id, ".wav");
@@ -126,11 +126,12 @@ impl VideoConfig {
 pub fn convert_to_hls( bitrate: &str, content_length: &str, job_id: &str, file_extension: &str) -> Result<(), String> {
 
 //input file 
-let input_path_file = format!("../media/processing/{}.{}", job_id, file_extension);
+let input_path_file = format!("../media/input/{}.{}", job_id, file_extension);
 
-//the output directory 
-let vidoutput_dir = "../media/output";
-let final_destination = Path::new(vidoutput_dir).join("index.m3u8"); 
+//the output directory — one subfolder per job
+let vidoutput_dir = format!("../media/output/playlist/{}", job_id);
+std::fs::create_dir_all(&vidoutput_dir).map_err(|e| format!("failed to create playlist dir: {}", e))?;
+let final_destination = Path::new(&vidoutput_dir).join("index.m3u8");
 
   //call the ffmpeg on video
     let options = [
@@ -220,16 +221,16 @@ let final_destination = Path::new(vidoutput_dir).join("index.m3u8");
 pub fn generate_sprites(job_id: &str, file_extension: &str) -> Result<(), String> {
 
 //input path 
-let input_path = format!("media/processing/{}.{}", job_id, file_extension);
+let input_path = format!("../media/input/{}.{}", job_id, file_extension);
 
 //output path 
-let output_path = format!("media/output/sprites/{}.{}", job_id,"png");
+let output_path = format!("../media/output/sprites/{}.{}", job_id,"png");
 
  let mut sprite_generator = Command::new("ffmpeg");
 
  //argument for the sprite generator
  sprite_generator
- .arg("i")
+ .arg("-i")
  .arg(input_path)
  .arg("-vf")
  .arg("fps=1, scale=320:-1, tile=10x10");
