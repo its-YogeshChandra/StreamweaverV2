@@ -224,7 +224,9 @@ pub fn generate_sprites(job_id: &str, file_extension: &str) -> Result<(), String
 let input_path = format!("../media/input/{}.{}", job_id, file_extension);
 
 //output path 
-let output_path = format!("../media/output/sprites/{}.{}", job_id,"png");
+let output_dir = "../media/output/sprites";
+std::fs::create_dir_all(output_dir).map_err(|e| format!("failed to create sprites dir: {}", e))?;
+let output_path = format!("{}/{}.png", output_dir, job_id);
 
  let mut sprite_generator = Command::new("ffmpeg");
 
@@ -233,12 +235,16 @@ let output_path = format!("../media/output/sprites/{}.{}", job_id,"png");
  .arg("-i")
  .arg(input_path)
  .arg("-vf")
- .arg("fps=1, scale=320:-1, tile=10x10");
+ .arg("fps=1,scale=320:-1,tile=10x10")
+ .arg("-frames:v")
+ .arg("1")
+ .arg("-update")
+ .arg("1");
 
  //capture the output 
  let cmd = sprite_generator
  .arg(output_path)
- .stdin(Stdio::piped())
+ .stdout(Stdio::piped())
  .stderr(Stdio::piped())
  .output(); 
 

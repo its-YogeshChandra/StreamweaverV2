@@ -32,13 +32,13 @@ pub async fn generate_chapters(job_id: &str) -> Result<(), String> {
   //give the path to the output dir
   let path = "../media/output/chapters";
   std::fs::create_dir_all(path).map_err(|e| format!("failed to create output/chapters directory: {}", e))?;
-  let output_path = format!("{}/{}.text", path, job_id);
+  let output_path = format!("{}/{}.json", path, job_id);
   
   //read the content payload
    let content_payload_path = format!("../media/processing/transcript/{}.vtt", job_id); 
    let content_payload = std::fs::read_to_string(&content_payload_path)
        .map_err(|e| format!("failed to read VTT file {}: {}", content_payload_path, e))?;
-   
+  
    //build the http client 
    let client = reqwest::Client::builder()
        .timeout(Duration::from_secs(60))
@@ -58,7 +58,7 @@ pub async fn generate_chapters(job_id: &str) -> Result<(), String> {
         }]
     }], 
     "generationConfig": {
-        "response_mime_type": "text/plain",
+        "response_mime_type": "application/json",
         "temperature": 0.4,
     }
   });
@@ -68,7 +68,6 @@ pub async fn generate_chapters(job_id: &str) -> Result<(), String> {
    client
    .post(target_url)
    .header("Content-Type", "application/json")
-   .header("Authorization", format!("Bearer {}", api_key))
    .json(&payload)
    .send()
    .await
