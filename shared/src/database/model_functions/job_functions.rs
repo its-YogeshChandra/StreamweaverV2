@@ -3,9 +3,6 @@ use diesel::pg::PgConnection;
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use crate::schema;
-
-
 //create the respective struct for the job 
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::jobs)]
