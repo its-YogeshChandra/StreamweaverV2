@@ -10,7 +10,7 @@ use shared::database::establish_connection;
 use shared::Job;
 use shared::UpdateJobRequest;
 use uuid::Uuid;
-
+use tokio;
 
 
 #[::tokio::main]
@@ -42,10 +42,27 @@ async fn main() {
             eprintln!("[main] chapter generation failed for job {}: {}", &job.job_id, e);
         }
         
+        //set the system for multiple job id and file extension (not optimal approach but it works)
+        let job_id_clone = job.job_id.clone();
+        let job_id_clone2 = job.job_id.clone();
+        let file_extension_clone = job.file_extension.clone();
+        let file_extension_clone2 = job.file_extension.clone();
+
+
         //let threat = detect_threats(&transcript);              // Regex + keyword scan
-        convert_to_hls(&job.bitrate, &job.content_length, &job.job_id, &job.file_extension).unwrap(); // FFmpeg subprocess
+      let hls_handle = tokio::task::spawn_blocking(move || convert_to_hls(&job.bitrate, &job.content_length, &job_id_clone, &file_extension_clone).unwrap()); // FFmpeg subprocess
  
-        generate_sprites(&job.job_id, &job.file_extension).unwrap();        // FFmpeg subprocess
+        let sprite_handle = tokio::task::spawn_blocking(move || generate_sprites(&job_id_clone2, &file_extension_clone2).unwrap()); // FFmpeg subprocess
+        
+        let (hls_result , sprite_result) = tokio::join!(hls_handle, sprite_handle);
+
+        //check if the hls_result or sprite_result is error
+        if hls_result.is_err() {
+            eprintln!("[main] hls conversion failed for job {}: {}", &job.job_id, hls_result.err().unwrap());
+        }
+        if sprite_result.is_err() {
+            eprintln!("[main] sprite generation failed for job {}: {}", &job.job_id, sprite_result.err().unwrap());
+        }
 
         // Upload to S3
         upload_to_cloud(&job.job_id).await.unwrap();
