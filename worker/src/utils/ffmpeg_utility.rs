@@ -28,7 +28,8 @@ pub fn convert_to_wav( job_id: &str, file_extension: &str) -> Result<(), String>
     .arg(input_path)
     .args(&options)
     .arg(output_file_name)
-    .output();
+    .output()
+    .unwrap();
 
     //capture the output 
     let cmd = ffmpeg_mod.stdout(Stdio::piped()).stderr(Stdio::piped()).output();

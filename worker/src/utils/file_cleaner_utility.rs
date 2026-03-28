@@ -1,6 +1,6 @@
 //utility function to clear the local files
 use dotenv::dotenv;
-use tokio::fs::{self, File};
+use tokio::fs::{self};
 
 pub async fn file_cleaner_utility(job_id: &str) -> Result<(), String> {
     dotenv().ok();

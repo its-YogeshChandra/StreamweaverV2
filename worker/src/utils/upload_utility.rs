@@ -55,7 +55,7 @@ pub async fn upload_to_cloud(job_id: &str) -> Result<(), String> {
                 let result = client.put_object().bucket(&bucket_name).key(&s3_key).body(body_stream).send().await;
 
                 match result {
-                    Ok(value) => {
+                    Ok(_value) => {
                         println!("File uploaded successfully");
                      
                     }

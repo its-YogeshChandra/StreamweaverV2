@@ -36,7 +36,7 @@ async fn main() {
         
         // 6-stage pipeline
         convert_to_wav(&job.job_id, &job.file_extension).unwrap(); // FFmpeg subprocess
-        transcriber(&job.job_id).unwrap();  // whisper-rs
+        transcriber(&job.job_id).await.unwrap();  // whisper-server HTTP call
         generate_chapters(&job.job_id).await;   
         
         //let threat = detect_threats(&transcript);              // Regex + keyword scan
