@@ -13,8 +13,7 @@ export default function UploadPage() {
   const [isDragging, setIsDragging] = useState(false);
   
   const [resolution, setResolution] = useState("1080p");
-  const [startTime, setStartTime] = useState("00:00:00");
-  const [endTime, setEndTime] = useState("00:00:00");
+  const [chunkLength, setChunkLength] = useState(4);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -69,7 +68,7 @@ export default function UploadPage() {
 
           <nav className="hidden md:flex items-center gap-8 lg:gap-12">
             <span className="text-sm lg:text-base font-medium text-[#F25FAD]">
-              // workstation
+              {"// workstation"}
             </span>
           </nav>
 
@@ -201,39 +200,47 @@ export default function UploadPage() {
                 </div>
               </div>
 
-              {/* Time Period */}
+              {/* Chunk Length Slider */}
               <div className="col-span-1 lg:col-span-5 rounded-2xl bg-gray-900/40 border border-gray-800/80 p-6 backdrop-blur-sm shadow-xl transition-all hover:border-gray-700 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-6">
                     <svg className="w-5 h-5 text-[#F25FAD]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 13.5V3.75m0 9.75a1.5 1.5 0 010 3m0-3a1.5 1.5 0 000 3m0 3.75V16.5m12-3V3.75m0 9.75a1.5 1.5 0 010 3m0-3a1.5 1.5 0 000 3m0 3.75V16.5m-6-9V3.75m0 3.75a1.5 1.5 0 010 3m0-3a1.5 1.5 0 000 3m0 9.75V10.5" />
                     </svg>
-                    <h3 className="text-lg font-semibold text-gray-200">Time Segment</h3>
+                    <h3 className="text-lg font-semibold text-gray-200">Chunk Length</h3>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
-                    <div className="flex flex-col w-full sm:flex-1">
-                      <label className="text-xs text-gray-400 mb-1.5 font-mono uppercase tracking-widest pl-1">Start</label>
-                      <input 
-                        type="time" 
-                        step="1"
-                        value={startTime}
-                        onChange={e => setStartTime(e.target.value)}
-                        className="w-full bg-black/60 border border-gray-700/80 rounded-xl px-4 py-2.5 text-gray-200 outline-none focus:border-[#F25FAD] focus:ring-1 focus:ring-[#F25FAD]/50 transition-all font-mono text-sm shadow-inner"
-                      />
+                  <div className="flex flex-col gap-5 w-full">
+                    <div className="flex justify-between items-end mb-2">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-400 mb-1 uppercase tracking-wider font-mono">HLS Segments</span>
+                        <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                          {chunkLength}s
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-[#F25FAD] font-mono border border-[#F25FAD]/30 bg-[#F25FAD]/10 px-2.5 py-1 rounded-full uppercase tracking-widest">
+                        Optimal
+                      </div>
                     </div>
                     
-                    <div className="hidden sm:flex text-gray-600 mt-6">-</div>
-                    
-                    <div className="flex flex-col w-full sm:flex-1">
-                      <label className="text-xs text-gray-400 mb-1.5 font-mono uppercase tracking-widest pl-1">End</label>
+                    <div className="relative w-full">
                       <input 
-                        type="time" 
+                        type="range" 
+                        min="2" 
+                        max="20" 
                         step="1"
-                        value={endTime}
-                        onChange={e => setEndTime(e.target.value)}
-                        className="w-full bg-black/60 border border-gray-700/80 rounded-xl px-4 py-2.5 text-gray-200 outline-none focus:border-[#F25FAD] focus:ring-1 focus:ring-[#F25FAD]/50 transition-all font-mono text-sm shadow-inner"
+                        value={chunkLength}
+                        onChange={e => setChunkLength(Number(e.target.value))}
+                        className="w-full appearance-none bg-transparent cursor-pointer 
+                          [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-gray-800 [&::-webkit-slider-runnable-track]:border [&::-webkit-slider-runnable-track]:border-gray-700/50 [&::-webkit-slider-runnable-track]:h-2 
+                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-[#F25FAD] [&::-webkit-slider-thumb]:to-purple-500 [&::-webkit-slider-thumb]:mt-[-6px] [&::-webkit-slider-thumb]:shadow-[0_0_12px_rgba(242,95,173,0.5)] 
+                          focus:outline-none hover:[&::-webkit-slider-thumb]:scale-110 transition-all duration-200"
                       />
+                      <div className="flex justify-between w-full mt-3 text-xs text-gray-500 font-mono">
+                        <span>2s</span>
+                        <span>10s</span>
+                        <span>20s</span>
+                      </div>
                     </div>
                   </div>
                 </div>
