@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 const svgPaths = {
   pefc0a30: "M139.5 0.5V44.5H4.5V0.5H139.5Z",
@@ -29,7 +30,7 @@ export default function Home() {
           </nav>
 
           {/* CTA Button */}
-          <button className="relative group cursor-pointer transition-transform hover:scale-105 active:scale-95">
+          <Link href="/upload" className="relative group cursor-pointer transition-transform hover:scale-105 active:scale-95 block">
             <svg 
               className="w-[110px] h-[42px] sm:w-[136px] sm:h-[50px] drop-shadow-lg" 
               fill="none" 
@@ -53,7 +54,7 @@ export default function Home() {
             <span className="absolute inset-0 flex items-center justify-center font-semibold text-white text-sm sm:text-base lg:text-lg pointer-events-none">
               onboard
             </span>
-          </button>
+          </Link>
         </div>
 
         {/* Separator Line */}
@@ -94,7 +95,7 @@ export default function Home() {
         </p>
 
         {/* Video/Image Placeholder */}
-        <div className="w-full max-w-5xl aspect-video rounded-2xl bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-2xl overflow-hidden relative group cursor-pointer flex items-center justify-center transition-all hover:border-gray-700 hover:shadow-[#F25FAD]/10 hover:shadow-2xl">
+        <Link href="/upload" className="w-full max-w-5xl aspect-video rounded-2xl bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-2xl overflow-hidden relative group cursor-pointer flex items-center justify-center transition-all hover:border-gray-700 hover:shadow-[#F25FAD]/10 hover:shadow-2xl block">
           {/* Animated background gradient inside placeholder */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
           
@@ -104,7 +105,7 @@ export default function Home() {
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
-        </div>
+        </Link>
       </main>
     </div>
   );
