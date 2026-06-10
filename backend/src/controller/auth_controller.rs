@@ -1,6 +1,8 @@
+use std::env;
+
 //function to decode the headers 
 use actix_web::{post, HttpRequest, HttpResponse};
-use jsonwebtoken::{decode};
+use jsonwebtoken::{DecodingKey, decode};
 
 #[derive(Debug,Clone)]
 pub struct JwtToken {
@@ -45,4 +47,17 @@ fn decode_headers(req: &HttpRequest) -> Result<JwtToken, String> {
             return Err("Authorization header not found".to_string());
         }
     }
+}
+
+
+pub fn decode_jwt (token : JwtToken){
+    let key = env::var("JWT_SECRET").expect("JWT_SECRET not found");
+    let decoding_key = DecodingKey::from(key);
+     //decode the jwt token 
+    let decoded = decode(
+        token.value
+        , &key
+        , &decoding_key
+    ).unwrap();
+    println!("{:?}", decoded);
 }
