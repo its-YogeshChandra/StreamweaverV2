@@ -2,12 +2,22 @@ use std::env;
 
 //function to decode the headers 
 use actix_web::{post, HttpRequest, HttpResponse};
-use jsonwebtoken::{DecodingKey, decode};
+use jsonwebtoken::{DecodingKey, Validation, decode};
+use reqwest::header::Entry::Vacant;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug,Clone)]
 pub struct JwtToken {
     pub value : String
 }
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct AuthVal{
+    pub email:  String,
+    pub password: String,
+}
+
+
 
 fn decode_headers(req: &HttpRequest) -> Result<JwtToken, String> {
     // Get the headers from the request
@@ -50,14 +60,25 @@ fn decode_headers(req: &HttpRequest) -> Result<JwtToken, String> {
 }
 
 
-pub fn decode_jwt (token : JwtToken){
+pub fn decode_jwt (token : JwtToken) -> Result<AuthVal, Box<dyn std::error::Error>> {
     let key = env::var("JWT_SECRET").expect("JWT_SECRET not found");
-    let decoding_key = DecodingKey::from(key);
+    let decoding_key = DecodingKey::from_secret(key.as_bytes());
+    let validation = Validation::default(); 
+
      //decode the jwt token 
-    let decoded = decode(
+    match decode::<AuthVal>(
         token.value
-        , &key
         , &decoding_key
-    ).unwrap();
-    println!("{:?}", decoded);
+        , &validation
+    ) {
+        Ok(token_data) => {
+            println!("Token decoded successfully: {:?}", token_data);
+            return Ok(token_data.claims);
+        }
+        Err(error) => {
+            println!("Error decoding token: {:?}", error);
+            return Err(Box::new(error));
+        }
+    };
+
 }
