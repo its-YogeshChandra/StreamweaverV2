@@ -26,8 +26,6 @@ pub struct RequestPayload {
 }
 
 
-
-
 #[derive(Serialize)]
 pub struct Response{
  job_id : String,
