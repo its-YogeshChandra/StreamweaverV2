@@ -1,5 +1,5 @@
 use actix_web::{
-    HttpResponse, Responder, http::StatusCode, post
+    HttpResponse, Responder, http::StatusCode, post, web
 };
 use actix_multipart::form::{MultipartForm, tempfile::TempFile, text::Text};
 use shared::{
@@ -8,7 +8,7 @@ use shared::{
     establish_connection,
 };
 use uuid::Uuid; 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, MultipartForm)]
 pub struct UploadVideo {
@@ -17,6 +17,16 @@ pub struct UploadVideo {
     bitrate: Text<String>,
     content_length: Text<String>,
 }
+#[derive(Deserialize, Serialize)]
+pub struct RequestPayload {
+    pub file_name: String,
+    pub video_url: String,
+    pub bitrate: String,
+    pub content_length: String,
+}
+
+
+
 
 #[derive(Serialize)]
 pub struct Response{
@@ -24,17 +34,13 @@ pub struct Response{
  status: String,
 }
 
+//have to change the controller 
+//rather then multipart data use simple json data 
 
 #[post("/upload")]
-pub async fn upload_video (MultipartForm(form): MultipartForm<UploadVideo>) -> impl Responder {
+pub async fn upload_video (payload: web::Json<RequestPayload>) -> impl Responder {
 
-   let file_name = form.video.file_name.unwrap().to_string();
-      println!("File name: {}", file_name);
-   
-  let destination_folder = format!("../media/input/{}", file_name.clone());
-
-   //write the video into the destination folder (optimise)
-   form.video.file.persist(&destination_folder).unwrap(); 
+   let RequestPayload { file_name, video_url, bitrate, content_length} = payload.into_inner();
 
    //call the establish connection(optimise)
    let mut conn = establish_connection().expect("Failed to connect to database");
@@ -46,7 +52,7 @@ pub async fn upload_video (MultipartForm(form): MultipartForm<UploadVideo>) -> i
     status: "queued".to_string(),
     stage: None,
     progress: None,
-    file_path: destination_folder,
+    file_path: video_url,
     file_size: None,
     original_name: Some(file_name),
     threat_level: None,
@@ -61,19 +67,13 @@ pub async fn upload_video (MultipartForm(form): MultipartForm<UploadVideo>) -> i
     let db_result = Job::create(&mut conn, &job).unwrap();
 
     println!("db_result: {}", db_result.file_path); 
-    
-    //update the name of the video to the id from the database
-     //read the extension of the file
-    let extension = db_result.file_path.split('.').last().unwrap();
-    let new_file_path = format!("../media/input/{}.{}", db_result.id.to_string(), extension);
-    std::fs::rename(&db_result.file_path, &new_file_path).unwrap();
 
     //call the redis 
     let job_list = JobList {
         job_id: db_result.id.to_string(),
-        file_extension: extension.to_string(),
-        bitrate: form.bitrate.to_string(),
-        content_length: form.content_length.to_string(),
+        file_extension: db_result.file_path.to_string(),
+        bitrate,
+        content_length,
     };
 
     let redis_result = set_job(job_list);

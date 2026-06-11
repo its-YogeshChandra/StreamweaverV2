@@ -1,4 +1,4 @@
-use actix_web::{App, HttpServer, middleware::{Logger, from_fn}, web::service};
+use actix_web::{App, HttpServer, middleware::{Logger, from_fn}};
 use std::io::Result;
 mod controller;
 mod utilities;
