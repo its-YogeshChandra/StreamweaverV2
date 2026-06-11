@@ -10,13 +10,6 @@ use shared::{
 use uuid::Uuid; 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, MultipartForm)]
-pub struct UploadVideo {
-    #[multipart(limit = "100mb")]
-    video: TempFile,
-    bitrate: Text<String>,
-    content_length: Text<String>,
-}
 #[derive(Deserialize, Serialize)]
 pub struct RequestPayload {
     pub file_name: String,
