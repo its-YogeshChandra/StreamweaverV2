@@ -39,7 +39,10 @@ async fn main() -> std::io::Result<()>{
         };     
 
         Job::update_job_status(&mut db_conn, update_job_request).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to update job status"))?;
+    
+        //function to get the data from the media bucket 
         
+
         // 6-stage pipeline
         convert_to_wav(&job.job_id, &job.file_extension).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to convert to wav"))?;
         transcriber(&job.job_id).await.map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to transcribe"))?;

@@ -1,7 +1,6 @@
 use actix_web::{
     HttpResponse, Responder, http::StatusCode, post, web
 };
-use actix_multipart::form::{MultipartForm, tempfile::TempFile, text::Text};
 use shared::{
     job_functions::Job,
     redis_jobs::{set_job, JobList},
