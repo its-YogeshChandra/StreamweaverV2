@@ -12,16 +12,14 @@ pub async fn decode_user(
     req: ServiceRequest,
     next: Next<impl MessageBody>,
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
-    //call the decode header
     match decode_headers(&req) {
         Ok(headers) => {
-            //call decode jwt function
             let jwt = decode_jwt(headers);
-            //return the user
             match jwt {
                 Ok(user) => {
                     // store user data in request extensions so handlers can access it
                     req.extensions_mut().insert(user);
+                    
                     // forward to the next handler
                     next.call(req).await
                 }
