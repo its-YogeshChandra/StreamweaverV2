@@ -2,6 +2,7 @@ use actix_web::{App, HttpServer, middleware::Logger};
 use std::io::Result;
 mod controller;
 mod utilities;
+mod middlewares;
 
 use shared::establish_connection;
 use crate::controller::upload_video;
