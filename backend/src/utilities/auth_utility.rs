@@ -1,9 +1,8 @@
 use std::env;
 
 //function to decode the headers 
-use actix_web::{post, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest};
 use jsonwebtoken::{DecodingKey, Validation, decode};
-use reqwest::header::Entry::Vacant;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug,Clone)]
