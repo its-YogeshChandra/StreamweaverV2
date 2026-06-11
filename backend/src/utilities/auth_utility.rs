@@ -1,7 +1,7 @@
 use std::env;
 
 //function to decode the headers 
-use actix_web::{HttpRequest};
+use actix_web::{dev::{ServiceRequest}};
 use jsonwebtoken::{DecodingKey, Validation, decode};
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ pub struct AuthVal{
 
 
 
-pub fn decode_headers(req: &HttpRequest) -> Result<JwtToken, String> {
+pub fn decode_headers(req: &ServiceRequest) -> Result<JwtToken, String> {
     // Get the headers from the request
     let headers = req.headers();
     let auth_header = headers.get("Authorization");
