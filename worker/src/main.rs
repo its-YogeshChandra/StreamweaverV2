@@ -14,30 +14,35 @@ use tokio;
 
 
 #[::tokio::main]
-async fn main() {
+async fn main() -> std::io::Result<()>{
 
     //loop constantly 
     loop {
      //connect to the database 
-        let mut db_conn = establish_connection().unwrap();
+        let mut db_conn = establish_connection().map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to connect to database"))?;
    
         // Blocking pop — waits for next job (optimize)
-        let job: JobList = get_job().unwrap(); 
-        
+        let job: JobList = match get_job(){
+            Some(job) => job,
+            None => {
+                continue;
+            }
+        }; 
+
         // Update status
         //create the update job request payload 
-        let job_id :Uuid = job.job_id.parse().unwrap(); 
+        let job_id :Uuid = job.job_id.parse().expect("Failed to parse job_id to uuid"); 
         let update_job_request = UpdateJobRequest {
             job_id: job_id.clone(),
             status: "processing".to_string(),
             stage: "extracting audio".to_string(),
         };     
 
-        Job::update_job_status(&mut db_conn, update_job_request).unwrap();
+        Job::update_job_status(&mut db_conn, update_job_request).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to update job status"))?;
         
         // 6-stage pipeline
-        convert_to_wav(&job.job_id, &job.file_extension).unwrap(); // FFmpeg subprocess
-        transcriber(&job.job_id).await.unwrap();  // whisper-server HTTP call
+        convert_to_wav(&job.job_id, &job.file_extension).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to convert to wav"))?;
+        transcriber(&job.job_id).await.map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to transcribe"))?;
         if let Err(e) = generate_chapters(&job.job_id).await {
             eprintln!("[main] chapter generation failed for job {}: {}", &job.job_id, e);
         }
@@ -50,9 +55,9 @@ async fn main() {
 
 
         //let threat = detect_threats(&transcript);              // Regex + keyword scan
-      let hls_handle = tokio::task::spawn_blocking(move || convert_to_hls(&job.bitrate, &job.content_length, &job_id_clone, &file_extension_clone).unwrap()); // FFmpeg subprocess
+      let hls_handle = tokio::task::spawn_blocking(move || convert_to_hls(&job.bitrate, &job.content_length, &job_id_clone, &file_extension_clone).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to convert to hls"))); // FFmpeg subprocess
  
-        let sprite_handle = tokio::task::spawn_blocking(move || generate_sprites(&job_id_clone2, &file_extension_clone2).unwrap()); // FFmpeg subprocess
+        let sprite_handle = tokio::task::spawn_blocking(move || generate_sprites(&job_id_clone2, &file_extension_clone2).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to generate sprites"))); // FFmpeg subprocess
         
         let (hls_result , sprite_result) = tokio::join!(hls_handle, sprite_handle);
 
@@ -65,8 +70,8 @@ async fn main() {
         }
 
         // Upload to S3
-        upload_to_cloud(&job.job_id).await.unwrap();
-        let job_id :Uuid = job.job_id.parse().unwrap(); 
+        upload_to_cloud(&job.job_id).await.map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to upload to s3"))?;
+        let job_id :Uuid = job.job_id.parse().map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to parse job_id to uuid"))?;
         let update_job_request = UpdateJobRequest {
             job_id: job_id.clone(),
             status: "completed".to_string(),
@@ -74,10 +79,15 @@ async fn main() {
         };     
 
         //update the job  
-        Job::update_job_status(&mut db_conn, update_job_request).unwrap();
+        Job::update_job_status(&mut db_conn, update_job_request).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to update job status"))?;
         
         // Cleanup
-        file_cleaner_utility(&job.job_id).await.unwrap();
+       match  file_cleaner_utility(&job.job_id).await {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("[main] Failed to cleanup files: {}", e);
+        }
+       };
     }
 } 
 
