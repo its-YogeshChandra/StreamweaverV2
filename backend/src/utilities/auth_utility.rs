@@ -18,7 +18,7 @@ pub struct AuthVal{
 
 
 
-fn decode_headers(req: &HttpRequest) -> Result<JwtToken, String> {
+pub fn decode_headers(req: &HttpRequest) -> Result<JwtToken, String> {
     // Get the headers from the request
     let headers = req.headers();
     let auth_header = headers.get("Authorization");
