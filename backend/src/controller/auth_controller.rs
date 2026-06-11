@@ -83,27 +83,3 @@ pub fn decode_jwt (token : JwtToken) -> Result<AuthVal, Box<dyn std::error::Erro
 
 }
 
-
-pub async fn login(req: HttpRequest) -> HttpResponse {
-    let token = decode_headers(&req);
-
-    match token {
-        Ok(token) => {
-            let decoded_token = decode_jwt(token);
-            match decoded_token {
-                Ok(decoded_token) => {
-                    //call on the database to create the user 
-                    
-                    
-                    HttpResponse::Ok().json(decoded_token)
-                },
-                Err(error) => {
-                    HttpResponse::InternalServerError().body(error.to_string())
-                }
-            }
-        },
-        Err(error) => {
-            HttpResponse::InternalServerError().body(error.to_string())
-        }
-    }
-}
