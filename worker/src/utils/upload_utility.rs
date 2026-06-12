@@ -86,6 +86,12 @@ pub async fn upload_to_cloud(job_id: &str) -> Result<(), String> {
                 continue;
             }
 
+            // skip encryption key files — these are local-only,
+            // the actual key is stored in the database
+            if filename == "enc.key" || filename == "enc.keyinfo" {
+                continue;
+            }
+
             //read the file into a buffer
             let mut main_file = File::open(&file_path).await
                 .map_err(|e| format!("failed to open file {:?}: {}", file_path, e))?;

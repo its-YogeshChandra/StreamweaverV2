@@ -11,6 +11,15 @@ pub async fn file_cleaner_utility(job_id: &str) -> Result<(), String> {
         Err(e) => eprintln!("failed to delete hls folder {}: {}", hls_job_dir, e),
     }
 
+    // Delete the temp_media download folder for this job
+    let temp_media_path = format!("./temp_media/{}", job_id);
+    match fs::remove_file(&temp_media_path).await {
+        Ok(_) => println!("deleted temp media: {}", temp_media_path),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {},
+        Err(e) => eprintln!("failed to delete temp media {}: {}", temp_media_path, e),
+    }
+
+
     // Flat directories — delete only files belonging to this job
     let flat_dirs = [
         "../media/input",
