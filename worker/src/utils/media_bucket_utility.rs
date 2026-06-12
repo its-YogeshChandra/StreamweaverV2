@@ -1,7 +1,7 @@
 use reqwest::Client;
 
 
-pub async fn get_from_media_bucket(media_url : &str, job_id : &str, destination_folder_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn get_from_media_bucket(media_url : &str, _job_id : &str, destination_folder_path: &str) -> Result<(), Box<dyn std::error::Error>> {
   let client = Client::new();
   let response = client.get(media_url).send().await?;
 
