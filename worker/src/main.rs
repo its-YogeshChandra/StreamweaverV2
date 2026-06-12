@@ -5,6 +5,7 @@ use crate::utils::whisper_utility::transcriber;
 use crate::utils::generate_chapters;
 use crate::utils::upload_to_cloud;
 use crate::utils::file_cleaner_utility;
+use crate::utils::media_bucket_utility::get_from_media_bucket;
 use shared::redis_jobs::{get_job, JobList};
 use shared::database::establish_connection;
 use shared::Job;
@@ -40,11 +41,17 @@ async fn main() -> std::io::Result<()>{
 
         Job::update_job_status(&mut db_conn, update_job_request).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to update job status"))?;
     
-        //function to get the data from the media bucket 
-        
+        //function to get the data from the media bucket
+        let destination_folder = format!("./temp_media/{}", &job.job_id);
+        match get_from_media_bucket(&job.file_extension, &job.job_id, &destination_folder).await {
+            Ok(_) => {},
+            Err(e) => {
+                eprintln!("[main] Failed to get media from bucket: {}", e);
+            }
+         };        
 
         // 6-stage pipeline
-        convert_to_wav(&job.job_id, &job.file_extension).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to convert to wav"))?;
+        convert_to_wav(&job.job_id, &job.file_extension, &destination_folder).map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to convert to wav"))?;
         transcriber(&job.job_id).await.map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to transcribe"))?;
         if let Err(e) = generate_chapters(&job.job_id).await {
             eprintln!("[main] chapter generation failed for job {}: {}", &job.job_id, e);

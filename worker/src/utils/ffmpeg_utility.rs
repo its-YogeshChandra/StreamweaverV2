@@ -1,11 +1,7 @@
 use std::process::{Command, Stdio};
 use std::path::Path;
 
-pub fn convert_to_wav( job_id: &str, file_extension: &str) -> Result<(), String> {
-
-    //read the input file using the job id 
-    let input_path = format!("../media/input/{}.{}", job_id, file_extension);
-
+pub fn convert_to_wav( job_id: &str, file_extension: &str, input_folder : &str) -> Result<(), String> {
     //output directory  
     let path = "../media/processing/audio/";
 
@@ -25,7 +21,7 @@ pub fn convert_to_wav( job_id: &str, file_extension: &str) -> Result<(), String>
     //call the ffmpeg command to convert the audio to wav format 
     ffmpeg_mod
     .arg("-i")
-    .arg(input_path)
+    .arg(input_folder)
     .args(&options)
     .arg(output_file_name)
     .output()
