@@ -213,7 +213,6 @@ fn get_video_duration(input_path: &str) -> Result<f64, String> {
 }
 
 /// Generates a tiled sprite PNG and a matching VTT file for seek thumbnails.
-///
 /// Flow:
 ///   1. ffprobe → get video duration
 ///   2. ffmpeg → generate sprite sheet (tiled PNG) at 1fps, 320px wide, 10 columns

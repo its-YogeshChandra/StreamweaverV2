@@ -17,9 +17,9 @@ pub struct AesKeyResult {
 /// writes `enc.key` (raw bytes) and `enc.keyinfo` (FFmpeg key-info file)
 /// into `../media/output/playlist/{job_id}/`.
 /// Also stores the key in the database for later serving.
-///
 /// Returns the keyinfo path so the caller can pass it
 /// to FFmpeg via `-hls_key_info_file`.
+
 pub fn generate_aes_key(job_id: &str) -> Result<AesKeyResult, String> {
 
     // ── 1. Output directory (same folder the .m3u8 + .ts chunks live in) ──
@@ -111,6 +111,8 @@ pub fn generate_aes_key(job_id: &str) -> Result<AesKeyResult, String> {
 
     Ok(result)
 }
+
+
 
 /// Converts a hex string (e.g. "aabbccdd...") to a Vec<u8> of raw bytes.
 fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, String> {
