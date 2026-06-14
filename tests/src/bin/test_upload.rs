@@ -91,8 +91,8 @@ async fn test_missing_field(client: &Client, url: &str, auth_header: &str) {
 async fn test_empty_filename(client: &Client, url: &str, auth_header: &str) {
     println!("[3] Edge case — empty file_name");
     let payload = json!({
-        "file_name": "",
-        "video_url": "https://example.com/video.mp4",
+        "file_name": "bunny-girl-senpai.mp4",
+        "video_url": "https://player.cloudinary.com/embed/?cloud_name=dp6i6a3xy&public_id=This_Rocket_Landing_Didn_t_Seem_Real_OfhaJ8texh4_rgl40i",
         "bitrate": "720p",
         "content_length": "6"
     });
