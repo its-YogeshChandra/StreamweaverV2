@@ -1,17 +1,187 @@
 // Test binary for POST /upload endpoint
-// Run with: cargo run --bin test_upload
 //
-// What it tests:
-//   1. Happy path — valid payload returns 202 with job_id
-//   2. Missing field  — missing bitrate returns 4xx
-//   3. Empty file_name — returns 4xx
-//   4. Invalid bitrate value — still accepted (backend doesn't validate, worker handles fallback)
-//   5. No auth header — currently no middleware on this route, so it still passes
+// Run all tests:    cargo run --bin test_upload
+// Run one test:     cargo run --bin test_upload -- 1
+// Run multiple:     cargo run --bin test_upload -- 1 3 5
+//
+// Available tests:
+//   1  Happy path — valid payload returns 202 with job_id
+//   2  Missing field — missing bitrate returns 4xx
+//   3  Empty file_name edge case
+//   4  Invalid bitrate value — accepted, worker falls back to 720p
+//   5  Wrong Content-Type — should return 4xx
 
 use dotenv::dotenv;
 use reqwest::Client;
 use serde_json::{json, Value};
 use tests::helpers::{base_url, generate_test_jwt, jwt_secret};
+
+// ── Individual test functions ──
+
+async fn test_happy_path(client: &Client, url: &str, auth_header: &str) {
+    println!("[1] Happy path — valid payload");
+    let payload = json!({
+        "file_name": "big_buck_bunny.mp4",
+        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        "bitrate": "720p",
+        "content_length": "6"
+    });
+
+    let response = client
+        .post(url)
+        .header("Content-Type", "application/json")
+        .header("Authorization", auth_header)
+        .json(&payload)
+        .send()
+        .await;
+
+    match response {
+        Ok(res) => {
+            let status = res.status();
+            let body: Value = res.json().await.unwrap_or(json!({}));
+            if status == 202 {
+                println!("    ✓ PASS — got 202");
+                println!("    job_id : {}", body["job_id"]);
+                println!("    status : {}", body["status"]);
+            } else {
+                println!("    ✗ FAIL — expected 202, got {}", status);
+                println!("    body   : {}", body);
+            }
+        }
+        Err(e) => {
+            println!("    ✗ FAIL — request error: {}", e);
+            println!("    hint   : is the backend running on {}?", url);
+        }
+    }
+    println!();
+}
+
+async fn test_missing_field(client: &Client, url: &str, auth_header: &str) {
+    println!("[2] Missing field — no 'bitrate'");
+    let payload = json!({
+        "file_name": "test.mp4",
+        "video_url": "https://example.com/video.mp4",
+        "content_length": "6"
+    });
+
+    let response = client
+        .post(url)
+        .header("Content-Type", "application/json")
+        .header("Authorization", auth_header)
+        .json(&payload)
+        .send()
+        .await;
+
+    match response {
+        Ok(res) => {
+            let status = res.status();
+            if status.is_client_error() {
+                println!("    ✓ PASS — got {} (client error as expected)", status);
+            } else {
+                println!("    ✗ FAIL — expected 4xx, got {}", status);
+            }
+        }
+        Err(e) => {
+            println!("    ✗ FAIL — request error: {}", e);
+        }
+    }
+    println!();
+}
+
+async fn test_empty_filename(client: &Client, url: &str, auth_header: &str) {
+    println!("[3] Edge case — empty file_name");
+    let payload = json!({
+        "file_name": "",
+        "video_url": "https://example.com/video.mp4",
+        "bitrate": "720p",
+        "content_length": "6"
+    });
+
+    let response = client
+        .post(url)
+        .header("Content-Type", "application/json")
+        .header("Authorization", auth_header)
+        .json(&payload)
+        .send()
+        .await;
+
+    match response {
+        Ok(res) => {
+            let status = res.status();
+            let body: Value = res.json().await.unwrap_or(json!({}));
+            // Backend currently doesn't validate empty file_name — documents current behaviour
+            println!("    status : {} (job_id: {})", status, body["job_id"]);
+        }
+        Err(e) => {
+            println!("    ✗ FAIL — request error: {}", e);
+        }
+    }
+    println!();
+}
+
+async fn test_invalid_bitrate(client: &Client, url: &str, auth_header: &str) {
+    println!("[4] Invalid bitrate value — 'badresolution'");
+    let payload = json!({
+        "file_name": "test.mp4",
+        "video_url": "https://example.com/video.mp4",
+        "bitrate": "badresolution",
+        "content_length": "6"
+    });
+
+    let response = client
+        .post(url)
+        .header("Content-Type", "application/json")
+        .header("Authorization", auth_header)
+        .json(&payload)
+        .send()
+        .await;
+
+    match response {
+        Ok(res) => {
+            let status = res.status();
+            let body: Value = res.json().await.unwrap_or(json!({}));
+            if status == 202 {
+                println!("    ✓ PASS — job accepted (worker will fall back to 720p)");
+                println!("    job_id : {}", body["job_id"]);
+            } else {
+                println!("    ✗ FAIL — got {}", status);
+                println!("    body   : {}", body);
+            }
+        }
+        Err(e) => {
+            println!("    ✗ FAIL — request error: {}", e);
+        }
+    }
+    println!();
+}
+
+async fn test_wrong_content_type(client: &Client, url: &str, auth_header: &str) {
+    println!("[5] Wrong Content-Type — sending plain text");
+    let response = client
+        .post(url)
+        .header("Content-Type", "text/plain")
+        .header("Authorization", auth_header)
+        .body("this is not json")
+        .send()
+        .await;
+
+    match response {
+        Ok(res) => {
+            let status = res.status();
+            if status.is_client_error() {
+                println!("    ✓ PASS — got {} (rejected as expected)", status);
+            } else {
+                println!("    ✗ FAIL — expected 4xx, got {}", status);
+            }
+        }
+        Err(e) => {
+            println!("    ✗ FAIL — request error: {}", e);
+        }
+    }
+    println!();
+}
+
+// ── Main: parse args and run selected tests ──
 
 #[tokio::main]
 async fn main() {
@@ -20,156 +190,41 @@ async fn main() {
     let client = Client::new();
     let url = format!("{}/upload", base_url());
 
-    // Generate a signed JWT for requests that need auth
     let secret = jwt_secret();
     let token = generate_test_jwt("test@example.com", "test_password", &secret);
     let auth_header = format!("Bearer {}", token);
 
+    // Parse command-line args to pick which tests to run
+    // Usage: cargo run --bin test_upload -- 1 3 5
+    let args: Vec<String> = std::env::args().collect();
+    let selected_tests: Vec<u32> = if args.len() > 1 {
+        // User specified test numbers
+        args[1..].iter()
+            .filter_map(|a| a.parse::<u32>().ok())
+            .collect()
+    } else {
+        // No args — run all tests
+        vec![1, 2, 3, 4, 5]
+    };
+
     println!("===========================================");
     println!("  POST /upload — Integration Tests");
     println!("  Target: {}", url);
+    println!("  Running tests: {:?}", selected_tests);
     println!("===========================================\n");
 
-    // ── Test 1: Happy path ──
-    println!("[1] Happy path — valid payload");
-    let valid_payload = json!({
-        "file_name": "big_buck_bunny.mp4",
-        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        "bitrate": "720p",
-        "content_length": "6"
-    });
-
-    let response = client
-        .post(&url)
-        .header("Content-Type", "application/json")
-        .header("Authorization", &auth_header)
-        .json(&valid_payload)
-        .send()
-        .await
-        .expect("request failed");
-
-    let status = response.status();
-    let body: Value = response.json().await.unwrap_or(json!({}));
-
-    if status == 202 {
-        println!("    ✓ PASS — got 202");
-        println!("    job_id : {}", body["job_id"]);
-        println!("    status : {}", body["status"]);
-    } else {
-        println!("    ✗ FAIL — expected 202, got {}", status);
-        println!("    body   : {}", body);
+    for test_num in &selected_tests {
+        match test_num {
+            1 => test_happy_path(&client, &url, &auth_header).await,
+            2 => test_missing_field(&client, &url, &auth_header).await,
+            3 => test_empty_filename(&client, &url, &auth_header).await,
+            4 => test_invalid_bitrate(&client, &url, &auth_header).await,
+            5 => test_wrong_content_type(&client, &url, &auth_header).await,
+            _ => println!("[{}] unknown test number — skipping\n", test_num),
+        }
     }
 
-    println!();
-
-    // ── Test 2: Missing required field (bitrate) ──
-    println!("[2] Missing field — no 'bitrate'");
-    let missing_bitrate = json!({
-        "file_name": "test.mp4",
-        "video_url": "https://example.com/video.mp4",
-        "content_length": "6"
-        // bitrate is intentionally missing
-    });
-
-    let response = client
-        .post(&url)
-        .header("Content-Type", "application/json")
-        .header("Authorization", &auth_header)
-        .json(&missing_bitrate)
-        .send()
-        .await
-        .expect("request failed");
-
-    let status = response.status();
-
-    if status.is_client_error() {
-        println!("    ✓ PASS — got {} (client error as expected)", status);
-    } else {
-        println!("    ✗ FAIL — expected 4xx, got {}", status);
-    }
-
-    println!();
-
-    // ── Test 3: Empty file_name ──
-    println!("[3] Edge case — empty file_name");
-    let empty_name = json!({
-        "file_name": "",
-        "video_url": "https://example.com/video.mp4",
-        "bitrate": "720p",
-        "content_length": "6"
-    });
-
-    let response = client
-        .post(&url)
-        .header("Content-Type", "application/json")
-        .header("Authorization", &auth_header)
-        .json(&empty_name)
-        .send()
-        .await
-        .expect("request failed");
-
-    let status = response.status();
-    let body: Value = response.json().await.unwrap_or(json!({}));
-
-    // Backend currently doesn't validate empty file_name — it creates a job anyway
-    // This test documents the current behaviour
-    println!("    status : {} (backend accepts empty name — job_id: {})", status, body["job_id"]);
-
-    println!();
-
-    // ── Test 4: Invalid bitrate value ──
-    println!("[4] Invalid bitrate value — 'badresolution'");
-    let bad_bitrate = json!({
-        "file_name": "test.mp4",
-        "video_url": "https://example.com/video.mp4",
-        "bitrate": "badresolution",
-        "content_length": "6"
-    });
-
-    let response = client
-        .post(&url)
-        .header("Content-Type", "application/json")
-        .header("Authorization", &auth_header)
-        .json(&bad_bitrate)
-        .send()
-        .await
-        .expect("request failed");
-
-    let status = response.status();
-    let body: Value = response.json().await.unwrap_or(json!({}));
-
-    // Backend accepts any bitrate string — worker falls back to 720p internally
-    if status == 202 {
-        println!("    ✓ PASS — job accepted (worker will fall back to 720p)");
-        println!("    job_id : {}", body["job_id"]);
-    } else {
-        println!("    ✗ FAIL — got {}", status);
-        println!("    body   : {}", body);
-    }
-
-    println!();
-
-    // ── Test 5: Wrong Content-Type ──
-    println!("[5] Wrong Content-Type — sending plain text");
-    let response = client
-        .post(&url)
-        .header("Content-Type", "text/plain")
-        .header("Authorization", &auth_header)
-        .body("this is not json")
-        .send()
-        .await
-        .expect("request failed");
-
-    let status = response.status();
-
-    if status.is_client_error() {
-        println!("    ✓ PASS — got {} (rejected as expected)", status);
-    } else {
-        println!("    ✗ FAIL — expected 4xx, got {}", status);
-    }
-
-    println!();
     println!("===========================================");
-    println!("  Tests complete");
+    println!("  Done — ran {} test(s)", selected_tests.len());
     println!("===========================================");
 }
