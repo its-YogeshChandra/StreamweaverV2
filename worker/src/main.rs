@@ -43,14 +43,28 @@ async fn main() -> std::io::Result<()>{
         Job::update_job_status(&mut db_conn, update_job_request)
             .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to update job status"))?;
 
-        // Download from media bucket
-        let destination_folder = format!("./temp_media/{}", &job.job_id);
-        match get_from_media_bucket(&job.file_extension, &job.job_id, &destination_folder).await {
+        // ── Download from media bucket ──
+        // Save to ../media/input/{job_id}.{ext} — this is where both branches expect the file
+        let input_file_path = format!("../media/input/{}.{}", &job.job_id, &job.file_extension);
+
+        // create the input directory if it doesn't exist
+        std::fs::create_dir_all("../media/input")
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to create input dir: {}", e)))?;
+
+        match get_from_media_bucket(&job.video_url, &job.job_id, &input_file_path).await {
             Ok(_) => {
-                println!("[main] media downloaded for job {}", &job.job_id);
+                println!("[main] media downloaded to {}", &input_file_path);
             }
             Err(e) => {
-                eprintln!("[main] Failed to get media from bucket: {}", e);
+                eprintln!("[main] Failed to download media for job {}: {}", &job.job_id, e);
+                // Mark job as failed and skip to next job
+                let update_failed = UpdateJobRequest {
+                    job_id: job_id.clone(),
+                    status: "failed".to_string(),
+                    stage: "download failed".to_string(),
+                };
+                let _ = Job::update_job_status(&mut db_conn, update_failed);
+                continue;
             }
         };
 
@@ -67,15 +81,15 @@ async fn main() -> std::io::Result<()>{
         // ── Branch A: Audio pipeline (async) ──
         let audio_job_id = job.job_id.clone();
         let audio_file_ext = job.file_extension.clone();
-        let audio_dest = destination_folder.clone();
+        let audio_input = input_file_path.clone();
 
         let audio_handle = tokio::spawn(async move {
             // Step 1: Extract audio to WAV
             println!("[audio] starting WAV extraction for job {}", &audio_job_id);
             let wav_result = tokio::task::spawn_blocking({
                 let jid = audio_job_id.clone();
-                let dest = audio_dest.clone();
-                move || convert_to_wav(&jid, &audio_file_ext, &dest)
+                let input = audio_input.clone();
+                move || convert_to_wav(&jid, &audio_file_ext, &input)
             }).await;
 
             match wav_result {

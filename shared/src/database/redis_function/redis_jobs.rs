@@ -6,6 +6,7 @@ use serde::{Serialize, Deserialize};
 pub struct JobList {
     pub job_id: String,
     pub file_extension: String,
+    pub video_url: String,
     pub bitrate: String,
     pub content_length: String,
 }

@@ -32,6 +32,9 @@ pub async fn upload_video (payload: web::Json<RequestPayload>) -> impl Responder
 
    let RequestPayload { file_name, video_url, bitrate, content_length} = payload.into_inner();
 
+   //clone video_url before it gets moved into the Job struct
+   let video_url_for_redis = video_url.clone();
+
    //call the establish connection(optimise)
    let mut conn = establish_connection().expect("Failed to connect to database");
 
@@ -65,6 +68,7 @@ pub async fn upload_video (payload: web::Json<RequestPayload>) -> impl Responder
     let job_list = JobList {
         job_id: db_result.id.to_string(),
         file_extension: extension,
+        video_url: video_url_for_redis,
         bitrate,
         content_length,
     };

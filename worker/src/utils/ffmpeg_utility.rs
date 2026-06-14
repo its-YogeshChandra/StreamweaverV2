@@ -16,6 +16,7 @@ pub fn convert_to_wav(job_id: &str, file_extension: &str, input_folder: &str) ->
 
     //build and run the ffmpeg command (single execution — fixes the double-run bug)
     let cmd = Command::new("ffmpeg")
+        .arg("-hide_banner")
         .arg("-y")
         .arg("-i")
         .arg(input_folder)
@@ -140,6 +141,7 @@ pub fn convert_to_hls(
     let mut video_chunker = Command::new("ffmpeg");
 
     video_chunker
+        .arg("-hide_banner")
         .arg("-y")
         .arg("-i").arg(&input_path_file)
         .arg("-c:v").arg("libx264")
@@ -189,6 +191,7 @@ const SPRITE_FPS: u32 = 1; // one thumbnail per second
 /// Gets the duration of a video in seconds using ffprobe.
 fn get_video_duration(input_path: &str) -> Result<f64, String> {
     let output = Command::new("ffprobe")
+        .arg("-hide_banner")
         .arg("-v").arg("error")
         .arg("-show_entries").arg("format=duration")
         .arg("-of").arg("default=noprint_wrappers=1:nokey=1")
@@ -247,6 +250,7 @@ pub fn generate_sprites(job_id: &str, file_extension: &str) -> Result<(), String
 
     // ── 3. Generate the tiled sprite sheet ──
     let sprite_cmd = Command::new("ffmpeg")
+        .arg("-hide_banner")
         .arg("-y")
         .arg("-i").arg(&input_path)
         .arg("-vf").arg(format!("fps={},scale={}:-1,tile={}", SPRITE_FPS, SPRITE_WIDTH, tile_layout))
@@ -277,6 +281,7 @@ pub fn generate_sprites(job_id: &str, file_extension: &str) -> Result<(), String
     // We use ffprobe on the sprite image to get its full dimensions,
     // then calculate per-thumbnail height from the grid
     let probe_output = Command::new("ffprobe")
+        .arg("-hide_banner")
         .arg("-v").arg("error")
         .arg("-select_streams").arg("v:0")
         .arg("-show_entries").arg("stream=width,height")

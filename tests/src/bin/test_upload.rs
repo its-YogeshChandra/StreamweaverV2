@@ -22,7 +22,7 @@ async fn test_happy_path(client: &Client, url: &str, auth_header: &str) {
     println!("[1] Happy path — valid payload");
     let payload = json!({
         "file_name": "big_buck_bunny.mp4",
-        "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        "video_url": "https://res.cloudinary.com/dp6i6a3xy/video/upload/rocket_man.mp4",
         "bitrate": "720p",
         "content_length": "6"
     });
