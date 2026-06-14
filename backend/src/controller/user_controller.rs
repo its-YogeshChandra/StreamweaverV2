@@ -44,7 +44,7 @@ pub async fn upload_video (payload: web::Json<RequestPayload>) -> impl Responder
     progress: None,
     file_path: video_url,
     file_size: None,
-    original_name: Some(file_name),
+    original_name: Some(file_name.clone()),
     threat_level: None,
     output_urls: None,
     metadata: None,
@@ -58,10 +58,13 @@ pub async fn upload_video (payload: web::Json<RequestPayload>) -> impl Responder
 
     println!("db_result: {}", db_result.file_path); 
 
+    //extract extension from file_name (e.g. "test_video.mp4" → "mp4")
+    let extension = file_name.split('.').last().unwrap_or("mp4").to_string();
+
     //call the redis 
     let job_list = JobList {
         job_id: db_result.id.to_string(),
-        file_extension: db_result.file_path.to_string(),
+        file_extension: extension,
         bitrate,
         content_length,
     };
