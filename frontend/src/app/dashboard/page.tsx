@@ -220,7 +220,7 @@ export default function DashboardPage() {
                   <span className="tiny-mono">LIVE</span>
                 </div>
               </div>
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={latencyData}>
                     <CartesianGrid
@@ -260,7 +260,7 @@ export default function DashboardPage() {
                         color: "#ffffff",
                       }}
                       labelStyle={{ color: "#848484" }}
-                      formatter={(value: number) => [
+                      formatter={(value) => [
                         `${value}ms`,
                         "Latency",
                       ]}
@@ -294,7 +294,7 @@ export default function DashboardPage() {
                   <span className="tiny-mono">LIVE</span>
                 </div>
               </div>
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={throughputData}>
                     <CartesianGrid
@@ -334,7 +334,7 @@ export default function DashboardPage() {
                         color: "#ffffff",
                       }}
                       labelStyle={{ color: "#848484" }}
-                      formatter={(value: number) => [
+                      formatter={(value) => [
                         `${value} MB/s`,
                         "Throughput",
                       ]}
