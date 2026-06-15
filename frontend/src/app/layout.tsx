@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bodoni_Moda, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import {ClerkProvider, Show} from "@clerk/nextjs"
 
 const bodoniModa = Bodoni_Moda({
   variable: "--font-bodoni-moda",
@@ -42,9 +43,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-sans bg-surface-container-lowest text-on-surface min-h-screen flex flex-col">
-        {children}
-      </body>
+      <ClerkProvider>
+        <body className="font-sans bg-surface-container-lowest text-on-surface min-h-screen flex flex-col">
+          {children}
+        </body>
+      </ClerkProvider>
     </html>
   );
 }
