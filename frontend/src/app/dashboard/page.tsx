@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -80,6 +81,42 @@ const navItems = [
 ];
 
 export default function DashboardPage() {
+  const [showStream, setShowStream] = useState(true);
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'processing'>('idle');
+  const [videoSrc, setVideoSrc] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const handleNewStream = () => {
+    setShowStream(true);
+    setStatus('idle');
+    setVideoSrc(null);
+    setUploadProgress(0);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setVideoSrc(URL.createObjectURL(file));
+      setStatus('uploading');
+    }
+  };
+
+  useEffect(() => {
+    if (status === 'uploading') {
+      const interval = setInterval(() => {
+        setUploadProgress(p => {
+          if (p >= 100) {
+            clearInterval(interval);
+            setStatus('processing');
+            return 100;
+          }
+          return p + 5;
+        });
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [status]);
+
   return (
     <div className="h-screen w-full flex overflow-hidden bg-[#FAFAFA]">
       {/* ─── Sidebar ─── */}
@@ -116,7 +153,10 @@ export default function DashboardPage() {
         </nav>
 
         <div className="px-4 mt-auto space-y-2">
-          <button className="w-full bg-primary text-on-primary font-code-md py-2 border border-primary hover:bg-transparent hover:text-primary transition-colors">
+          <button 
+            onClick={handleNewStream}
+            className="w-full bg-primary text-on-primary font-code-md py-2 border border-primary hover:bg-transparent hover:text-primary transition-colors"
+          >
             New Stream
           </button>
           <div className="border-t border-outline-variant pt-2 mt-4 space-y-2">
@@ -180,30 +220,66 @@ export default function DashboardPage() {
         {/* ─── Horizontal Split Layout ─── */}
         <div className="flex-1 flex flex-col">
           {/* Top Half: Media Workspace */}
-          <div className="flex-1 relative border-b border-[#E5E7EB]">
-            <div className="absolute inset-0 grid-pattern opacity-30"></div>
+          <div className="flex-1 relative border-b border-[#E5E7EB] flex overflow-hidden bg-[#FAFAFA]">
+            <div className="absolute inset-0 grid-pattern opacity-30 pointer-events-none"></div>
             <div className="absolute top-4 left-4 z-10">
-              <span className="tiny-mono tracking-widest uppercase">
+              <span className="font-mono text-[10px] tracking-widest uppercase">
                 Workspace // Media_Workbench_01
               </span>
             </div>
-            <div className="relative w-full h-full flex items-center justify-center p-6">
-              <div className="relative w-full max-w-4xl aspect-video bg-surface-container-lowest border border-outline-variant flex flex-col items-center justify-center overflow-hidden">
-                {/* Dropzone */}
-                <div
-                  id="media-dropzone"
-                  className="absolute inset-0 flex flex-col items-center justify-center border-2 border-dashed border-outline-variant bg-surface-container-lowest transition-opacity duration-150"
-                >
-                  <h2 className="font-headline-md text-primary mb-1">
-                    Ingest raw media payload
-                  </h2>
-                  <p className="tiny-mono">Awaiting Cloudinary uplink...</p>
+            
+            <div className={`relative h-full flex items-center justify-center p-6 transition-all duration-500 ${status === 'processing' ? 'w-2/3' : 'w-full'}`}>
+              {showStream && (
+                <div className="relative w-full max-w-4xl aspect-video border border-[#E5E7EB] bg-[#FAFAFA] flex flex-col items-center justify-center overflow-hidden">
+                  
+                  {status === 'idle' && (
+                    <label className="absolute inset-0 flex flex-col items-center justify-center border-dashed border-gray-300 bg-white cursor-pointer hover:bg-gray-50 transition-colors z-20" style={{ borderWidth: '1px' }}>
+                      <input type="file" className="hidden" accept="video/*" onChange={handleFileSelect} />
+                      <h2 className="font-serif text-xl text-primary">Ingest Raw Media</h2>
+                    </label>
+                  )}
+
+                  {(status === 'uploading' || status === 'processing') && (
+                    <div className="absolute inset-0 z-10 bg-black">
+                      {videoSrc && (
+                        <video src={videoSrc} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+                      )}
+                      
+                      {status === 'uploading' && (
+                        <>
+                          <div className="absolute bottom-0 left-0 h-px bg-black transition-all duration-100 ease-linear" style={{ width: `${uploadProgress}%` }}></div>
+                          <div className="absolute bottom-4 left-4 font-mono text-[10px] text-white bg-black/50 px-2 py-1">
+                            UPLINKING_RAW_PAYLOAD...
+                          </div>
+                        </>
+                      )}
+
+                      {status === 'processing' && (
+                        <>
+                          <div className="absolute bottom-0 left-0 h-px bg-gray-500 w-full animate-pulse"></div>
+                          <div className="absolute bottom-4 left-4 font-mono text-[10px] text-white bg-black/50 px-2 py-1">
+                            ENGINE_PROCESSING_ACTIVE
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {/* Progress bar */}
-                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-outline-variant">
-                  <div className="h-full bg-primary w-1/3 transition-all duration-500"></div>
-                </div>
-              </div>
+              )}
+            </div>
+
+            {/* Sliding Ledger Side Panel */}
+            <div className={`h-full bg-[#FAFAFA] border-l border-[#E5E7EB] transition-all duration-500 overflow-hidden flex flex-col ${status === 'processing' ? 'w-1/3 opacity-100' : 'w-0 opacity-0 border-l-0'}`}>
+               <div className="p-4 border-b border-[#E5E7EB] shrink-0">
+                 <span className="font-mono text-[10px] tracking-widest uppercase font-bold text-primary">Active Background Ledger</span>
+               </div>
+               <div className="flex-1 p-4 overflow-y-auto font-mono text-[10px] space-y-2 bg-[#FAFAFA]">
+                 <div className="text-gray-500">14:02:00 [SYS] Establishing worker node...</div>
+                 <div className="text-gray-500">14:02:01 [SYS] Analyzing stream segments...</div>
+                 <div className="text-gray-500">14:02:02 [SYS] Chunking media payload...</div>
+                 <div className="text-gray-500">14:02:03 [SYS] Allocating memory pool...</div>
+                 <div className="text-primary animate-pulse mt-4">ENGINE_PROCESSING_ACTIVE</div>
+               </div>
             </div>
           </div>
 
