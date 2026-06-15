@@ -1,21 +1,29 @@
 import type { Metadata } from "next";
-import { Outfit, Space_Mono } from "next/font/google";
+import { Bodoni_Moda, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const bodoniModa = Bodoni_Moda({
+  variable: "--font-bodoni-moda",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const spaceMono = Space_Mono({
-  weight: ["400", "700"],
-  variable: "--font-space-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Sweaver - One Stop Video Transcoder",
-  description: "Modern video transcoding platform.",
+  title: "Streamweaver - Next-gen Video Infrastructure",
+  description:
+    "A strictly deterministic, high-performance API for rendering, transcoding, and streaming. Clinical precision at scale.",
 };
 
 export default function RootLayout({
@@ -26,9 +34,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${spaceMono.variable} scroll-smooth antialiased`}
+      className={`${bodoniModa.variable} ${inter.variable} ${jetbrainsMono.variable} scroll-smooth antialiased`}
     >
-      <body className="font-sans bg-black text-white min-h-screen flex flex-col">{children}</body>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="font-sans bg-surface-container-lowest text-on-surface min-h-screen flex flex-col">
+        {children}
+      </body>
     </html>
   );
 }
