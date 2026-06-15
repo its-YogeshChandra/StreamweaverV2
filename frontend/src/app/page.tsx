@@ -1,4 +1,22 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Some dummy logs to cycle through for the ledger
+const dummyLogs = [
+  { level: "[INFO]", msg: "Ingesting block 4A9B..." },
+  { level: "[INFO]", msg: "Chunking complete for block 4A9B. Fragments generated: 12." },
+  { level: "[INFO]", msg: "Initiating AES-128 CBC payload encryption...", highlight: true, pulse: true },
+  { level: "[INFO]", msg: "Fragment 1/12 encrypted. Throughput: 1.21 GB/s." },
+  { level: "[SUCCESS]", msg: "Encryption validated for block 4A9B. IV stored.", success: true },
+  { level: "[INFO]", msg: "Ingesting block 4A9C..." },
+  { level: "[INFO]", msg: "Chunking complete for block 4A9C. Fragments generated: 12." },
+  { level: "[INFO]", msg: "Initiating AES-128 CBC payload encryption...", highlight: true, pulse: true },
+  { level: "[INFO]", msg: "Fragment 1/12 encrypted. Throughput: 1.25 GB/s." },
+  { level: "[SUCCESS]", msg: "Encryption validated for block 4A9C. IV stored.", success: true },
+];
 
 /* ═══════════════════════════════════════════════════════════
    Streamweaver Landing Page
@@ -6,11 +24,57 @@ import Link from "next/link";
    continuous scrollable page with shared header & footer.
    ═══════════════════════════════════════════════════════════ */
 
+interface LogEntry {
+  id: number;
+  time: string;
+  level: string;
+  msg: string;
+  highlight?: boolean;
+  pulse?: boolean;
+  success?: boolean;
+}
+
 export default function LandingPage() {
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+
+  useEffect(() => {
+    let index = 0;
+    
+    // Initial logs
+    setLogs(dummyLogs.slice(0, 3).map(log => ({
+      ...log,
+      id: index++,
+      time: new Date().toISOString().split('T')[1].slice(0, 12)
+    })));
+
+    const interval = setInterval(() => {
+      setLogs((prevLogs) => {
+        const nextLog = dummyLogs[index % dummyLogs.length];
+        const newLog = {
+          ...nextLog,
+          id: index,
+          time: new Date().toISOString().split('T')[1].slice(0, 12)
+        };
+        index++;
+        
+        // Keep last 10 logs to prevent infinite growth. Insert at top.
+        const updatedLogs = [newLog, ...prevLogs].slice(0, 10);
+        return updatedLogs;
+      });
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="bg-surface-container-lowest text-on-surface min-h-screen flex flex-col relative dot-grid">
       {/* ─── Top Navigation ─── */}
-      <header className="w-full z-50 bg-surface-container-lowest border-b border-outline-variant">
+      <motion.header 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full z-50 bg-surface-container-lowest border-b border-outline-variant"
+      >
         <div className="flex justify-between items-center w-full px-margin-desktop py-4 mx-auto max-w-[1440px]">
           {/* Brand */}
           <Link
@@ -68,12 +132,15 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* ═══════════════════════════════════════════════════════
           SECTION 1 — HERO
           ═══════════════════════════════════════════════════════ */}
-      <section
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
         id="hero"
         className="flex-grow flex flex-col justify-center items-center px-4 md:px-10 py-20 relative z-10 w-full max-w-[1200px] mx-auto text-center"
       >
@@ -150,12 +217,16 @@ export default function LandingPage() {
             <span className="font-headline-md text-primary">100k req/s</span>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════
           SECTION 2 — INFRASTRUCTURE ("Deterministic Speed")
           ═══════════════════════════════════════════════════════ */}
-      <section
+      <motion.section
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
         id="infrastructure"
         className="w-full max-w-[1200px] mx-auto px-4 md:px-10 py-20 flex flex-col gap-20"
       >
@@ -337,12 +408,16 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ═══════════════════════════════════════════════════════
           SECTION 3 — PIPELINE ("Processing Workbench")
           ═══════════════════════════════════════════════════════ */}
-      <section
+      <motion.section
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8 }}
         id="pipelines"
         className="w-full max-w-[1440px] mx-auto px-4 md:px-10 lg:px-20 py-20 flex flex-col gap-20"
       >
@@ -514,77 +589,38 @@ export default function LandingPage() {
                 </span>
               </div>
             </div>
-            <div className="p-4 overflow-y-auto font-code-md flex flex-col gap-1 flex-1">
-              {/* Log Entries */}
-              {[
-                {
-                  time: "14:02:01.045",
-                  level: "[INFO]",
-                  msg: "Ingesting block 4A9B...",
-                },
-                {
-                  time: "14:02:01.120",
-                  level: "[INFO]",
-                  msg: "Chunking complete for block 4A9B. Fragments generated: 12.",
-                },
-                {
-                  time: "14:02:01.125",
-                  level: "[INFO]",
-                  msg: "Initiating AES-128 CBC payload encryption...",
-                  highlight: true,
-                },
-                {
-                  time: "14:02:01.340",
-                  level: "[INFO]",
-                  msg: "Fragment 1/12 encrypted. Throughput: 1.21 GB/s.",
-                },
-                {
-                  time: "14:02:01.450",
-                  level: "[SUCCESS]",
-                  msg: "Encryption validated for block 4A9B. IV stored.",
-                  success: true,
-                },
-                {
-                  time: "14:02:02.010",
-                  level: "[INFO]",
-                  msg: "Ingesting block 4A9C...",
-                },
-                {
-                  time: "14:02:02.085",
-                  level: "[INFO]",
-                  msg: "Chunking complete for block 4A9C. Fragments generated: 12.",
-                },
-                {
-                  time: "14:02:02.090",
-                  level: "[INFO]",
-                  msg: "Initiating AES-128 CBC payload encryption...",
-                  highlight: true,
-                  pulse: true,
-                },
-              ].map((log, i) => (
-                <div
-                  key={i}
-                  className="flex gap-4 py-1 border-b border-surface-container-high"
-                >
-                  <span className="text-outline-variant w-24 shrink-0">
-                    {log.time}
-                  </span>
-                  <span
-                    className={`w-16 shrink-0 ${log.success ? "text-primary font-bold" : "text-outline-variant"}`}
+            <div className="p-4 overflow-y-auto font-code-md flex flex-col gap-1 flex-1 relative overflow-x-hidden">
+              <AnimatePresence>
+                {/* Log Entries */}
+                {logs.map((log) => (
+                  <motion.div
+                    key={log.id}
+                    initial={{ opacity: 0, height: 0, x: -20 }}
+                    animate={{ opacity: 1, height: 'auto', x: 0 }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="flex gap-4 py-1 border-b border-surface-container-high"
                   >
-                    {log.level}
-                  </span>
-                  <span
-                    className={`${log.success ? "text-primary font-bold" : log.highlight ? "text-secondary" : "text-on-surface-variant"} ${log.pulse ? "pulse-dot" : ""}`}
-                  >
-                    {log.msg}
-                  </span>
-                </div>
-              ))}
+                    <span className="text-outline-variant w-24 shrink-0">
+                      {log.time}
+                    </span>
+                    <span
+                      className={`w-24 shrink-0 ${log.success ? "text-primary font-bold" : "text-outline-variant"}`}
+                    >
+                      {log.level}
+                    </span>
+                    <span
+                      className={`${log.success ? "text-primary font-bold" : log.highlight ? "text-secondary" : "text-on-surface-variant"} ${log.pulse ? "pulse-dot" : ""}`}
+                    >
+                      {log.msg}
+                    </span>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ─── Footer ─── */}
       <footer className="w-full mt-auto bg-surface-container-lowest border-t border-outline-variant">
