@@ -8,6 +8,7 @@ use shared::{
 };
 use uuid::Uuid; 
 use serde::{Deserialize, Serialize};
+use crate::utilities::AuthenticatedUser;
 
 #[derive(Deserialize, Serialize)]
 pub struct RequestPayload {
@@ -28,7 +29,9 @@ pub struct Response{
 //rather then multipart data use simple json data 
 
 #[post("/upload")]
-pub async fn upload_video (payload: web::Json<RequestPayload>) -> impl Responder {
+pub async fn upload_video (user: AuthenticatedUser, payload: web::Json<RequestPayload>) -> impl Responder {
+
+    println!("Authenticated user: {}", user.0.sub);
 
    let RequestPayload { file_name, video_url, bitrate, content_length} = payload.into_inner();
 

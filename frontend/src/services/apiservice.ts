@@ -96,3 +96,4 @@ class ApiSystem {
 //get the base url from the env file || will get latch into proxying in future  
 const ApiService = new ApiSystem("http://localhost:8080");
 export default ApiService;
+   
