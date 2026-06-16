@@ -140,66 +140,59 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="h-screen w-full flex overflow-hidden bg-[#FAFAFA]">
+    <div className="h-screen w-full flex overflow-hidden bg-[#FAFAFA] rounded-none shadow-none">
       {/* ─── Sidebar ─── */}
-      <aside className={`bg-surface-container-low h-full shrink-0 z-30 transition-all duration-300 ${isSidebarOpen ? 'w-64 border-r border-outline-variant' : 'w-0 overflow-hidden'}`}>
-        <div className="w-64 h-full flex flex-col py-12">
-          <div className="px-4 mb-12">
-            <Link href="/" className="font-headline-md text-primary block">
+      <aside className={`bg-[#FAFAFA] h-full shrink-0 z-30 transition-all duration-300 rounded-none shadow-none ${isSidebarOpen ? 'w-64 border-r border-gray-200' : 'w-0 overflow-hidden'}`}>
+        <div className="w-64 h-full flex flex-col py-12 rounded-none shadow-none">
+          <div className="px-4 mb-12 rounded-none shadow-none">
+            <Link href="/" className="font-serif text-xl text-black block rounded-none shadow-none">
               Streamweaver
             </Link>
-            <div className="mt-6">
-              <p className="font-code-md text-primary font-bold">
+            <div className="mt-6 rounded-none shadow-none">
+              <p className="font-mono text-xs text-black font-bold uppercase rounded-none shadow-none">
                 Project Alpha
               </p>
-              <p className="font-label-caps text-on-surface-variant mt-1">
+              <p className="font-mono text-xs text-gray-500 mt-1 uppercase rounded-none shadow-none">
                 V-INFRA-NODE-01
               </p>
             </div>
           </div>
 
-          <nav className="flex-1 px-2 space-y-2">
+          <nav className="flex-1 px-2 space-y-2 rounded-none shadow-none">
             {navItems.map((item) => (
               <a
                 key={item.label}
                 href="#"
-                className={`flex items-center gap-4 px-4 py-2 transition-all duration-75 ${
+                className={`flex items-center gap-4 px-4 py-2 font-mono text-xs uppercase rounded-none shadow-none ${
                   item.active
-                    ? "bg-secondary-container text-on-secondary-container font-bold"
-                    : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+                    ? "text-black border-l border-gray-200"
+                    : "text-gray-500"
                 }`}
               >
-                <span className="material-symbols-outlined">{item.icon}</span>
-                <span className="font-code-md">{item.label}</span>
+                <span className="rounded-none shadow-none">{item.label}</span>
               </a>
             ))}
           </nav>
 
-          <div className="px-4 mt-auto space-y-2">
+          <div className="px-4 mt-auto space-y-2 rounded-none shadow-none">
             <button 
               onClick={handleNewStream}
-              className="w-full bg-primary text-on-primary font-code-md py-2 border border-primary hover:bg-transparent hover:text-primary transition-colors"
+              className="w-full text-left font-mono text-xs text-gray-500 hover:text-black uppercase px-4 py-2 rounded-none shadow-none border-none bg-transparent cursor-pointer transition-colors"
             >
-              New Stream
+              NEW STREAM
             </button>
-            <div className="border-t border-outline-variant pt-2 mt-4 space-y-2">
+            <div className="border-t border-gray-200 pt-2 mt-4 space-y-2 rounded-none shadow-none">
               <a
                 href="#"
-                className="flex items-center gap-4 px-4 py-1 text-on-surface-variant hover:text-on-surface transition-all duration-75"
+                className="flex items-center gap-4 px-4 py-1 font-mono text-xs text-gray-500 hover:text-black uppercase rounded-none shadow-none transition-colors"
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  menu_book
-                </span>
-                <span className="font-code-md text-[12px]">Documentation</span>
+                <span className="rounded-none shadow-none">DOCUMENTATION</span>
               </a>
               <a
                 href="#"
-                className="flex items-center gap-4 px-4 py-1 text-on-surface-variant hover:text-on-surface transition-all duration-75"
+                className="flex items-center gap-4 px-4 py-1 font-mono text-xs text-gray-500 hover:text-black uppercase rounded-none shadow-none transition-colors"
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  contact_support
-                </span>
-                <span className="font-code-md text-[12px]">Support</span>
+                <span className="rounded-none shadow-none">SUPPORT</span>
               </a>
             </div>
           </div>
@@ -207,118 +200,108 @@ export default function DashboardPage() {
       </aside>
 
       {/* ─── Main Content Area ─── */}
-      <main className="flex-1 flex flex-col h-full relative">
+      <main className="flex-1 flex flex-col h-full relative rounded-none shadow-none bg-[#FAFAFA]">
         {/* Header */}
-        <header className="bg-surface w-full border-b border-outline-variant flex justify-between items-center px-4 py-4 shrink-0 z-10">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-on-surface-variant hover:bg-surface-container transition-colors duration-150 p-1">
-              <span className="material-symbols-outlined">menu</span>
+        <header className="bg-[#FAFAFA] w-full border-b border-gray-200 flex justify-between items-center px-4 py-4 shrink-0 z-10 rounded-none shadow-none">
+          <div className="flex items-center gap-3 rounded-none shadow-none">
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-black p-1 rounded-none shadow-none bg-transparent border-none cursor-pointer">
+              <span className="material-symbols-outlined text-[20px]">menu</span>
             </button>
-            <h1 className="font-headline-md font-bold text-primary">
+            <h1 className="font-serif text-xl text-black rounded-none shadow-none">
               Streamweaver
             </h1>
           </div>
-          <div className="flex gap-4">
-            <button className="text-on-surface-variant hover:bg-surface-container transition-colors duration-150 p-1 hidden sm:block">
-              <span className="material-symbols-outlined">terminal</span>
+          <div className="flex gap-4 rounded-none shadow-none">
+            <button className="text-black p-1 hidden sm:block rounded-none shadow-none bg-transparent border-none cursor-pointer">
+              <span className="material-symbols-outlined text-[20px]">terminal</span>
             </button>
-            <button className="text-on-surface-variant hover:bg-surface-container transition-colors duration-150 p-1">
-              <span className="material-symbols-outlined">settings</span>
+            <button className="text-black p-1 rounded-none shadow-none bg-transparent border-none cursor-pointer">
+              <span className="material-symbols-outlined text-[20px]">settings</span>
             </button>
-            <button className="text-on-surface-variant hover:bg-surface-container transition-colors duration-150 p-1">
-              <span className="material-symbols-outlined">
-                account_circle
-              </span>
+            <button className="text-black p-1 rounded-none shadow-none bg-transparent border-none cursor-pointer">
+              <span className="material-symbols-outlined text-[20px]">account_circle</span>
             </button>
           </div>
         </header>
 
         {/* ─── Horizontal Split Layout ─── */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col rounded-none shadow-none">
           {/* Top Half: Media Workspace */}
-          <div className="flex-1 relative border-b border-[#E5E7EB] flex overflow-hidden bg-[#FAFAFA]">
-            <div className="absolute inset-0 grid-pattern opacity-30 pointer-events-none"></div>
-            <div className="absolute top-4 left-4 z-10">
-              <span className="font-mono text-[10px] tracking-widest uppercase">
-                Workspace // Media_Workbench_01
+          <div className="flex-1 relative border-b border-gray-200 flex overflow-hidden bg-[#FAFAFA] rounded-none shadow-none">
+            <div className="absolute top-4 left-4 z-10 rounded-none shadow-none">
+              <span className="font-mono text-xs text-gray-500 uppercase rounded-none shadow-none">
+                WORKSPACE // MEDIA_WORKBENCH_01
               </span>
             </div>
             
-            <div className={`relative h-full flex items-center justify-center p-6 transition-all duration-500 ${status === 'processing' ? 'w-2/3' : 'w-full'}`}>
+            <div className={`relative h-full flex items-center justify-center p-6 transition-all duration-500 rounded-none shadow-none ${status === 'processing' ? 'w-2/3' : 'w-full'}`}>
               {showStream && (
-                <div className="relative w-full max-w-4xl aspect-video border border-[#E5E7EB] bg-[#FAFAFA] flex flex-col items-center justify-center overflow-hidden">
+                <div className="relative w-full max-w-4xl aspect-video bg-[#FAFAFA] flex flex-col items-center justify-center overflow-hidden rounded-none shadow-none border-none">
                   
                   {status === 'idle' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center border-dashed border-gray-300 bg-white hover:bg-gray-50 transition-colors z-20" style={{ borderWidth: '1px' }}>
-                      <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center border border-dashed border-gray-200 bg-transparent z-20 rounded-none shadow-none">
+                      <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer rounded-none shadow-none">
                         <input 
                           type="file" 
                           className="hidden" 
                           accept="video/*" 
                           onChange={handleFileSelect}
                         />
-                        <h2 className="font-serif text-xl text-primary">Ingest Raw Media</h2>
+                        <h2 className="font-serif text-xl text-black rounded-none shadow-none">INGEST RAW MEDIA</h2>
                       </label>
                     </div>
                   )}
 
                   {(status === 'preview' || status === 'uploading' || status === 'processing' || status === 'error') && (
-                    <div className="absolute inset-0 z-10 bg-black">
+                    <div className="absolute inset-0 z-10 bg-transparent border-none rounded-none shadow-none">
                       {videoSrc && (
-                        <video src={videoSrc} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+                        <video src={videoSrc} className="w-full h-full object-cover border-none rounded-none shadow-none bg-black" autoPlay muted loop playsInline />
                       )}
                       
                       {status === 'uploading' && (
-                        <>
-                          <div className="absolute bottom-0 left-0 h-px bg-primary w-full animate-pulse"></div>
-                          <div className="absolute bottom-4 left-4 font-mono text-[10px] text-white bg-black/50 px-2 py-1 animate-pulse">
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white border border-gray-200 rounded-none shadow-none">
+                          <div className="font-mono text-xs text-black uppercase rounded-none shadow-none">
                             UPLINKING_RAW_PAYLOAD...
                           </div>
-                        </>
+                        </div>
                       )}
 
                       {status === 'processing' && (
-                        <>
-                          <div className="absolute bottom-0 left-0 h-px bg-gray-500 w-full animate-pulse"></div>
-                          <div className="absolute bottom-4 left-4 font-mono text-[10px] text-white bg-black/50 px-2 py-1">
+                         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white border border-gray-200 rounded-none shadow-none">
+                          <div className="font-mono text-xs text-black uppercase rounded-none shadow-none">
                             ENGINE_PROCESSING_ACTIVE
                           </div>
-                        </>
+                        </div>
                       )}
 
                       {status === 'preview' && (
-                        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent z-20">
-                          <div className="font-mono text-[10px] text-white/60 tracking-widest uppercase">
-                            Payload_Ready // Awaiting_Dispatch
-                          </div>
+                        <div className="absolute bottom-4 right-4 flex items-center justify-end z-20 rounded-none shadow-none">
                           <button
                             onClick={handleStartProcessing}
-                            className="bg-primary text-on-primary font-mono text-[11px] tracking-wider uppercase px-6 py-2.5 border border-primary hover:bg-transparent hover:text-white transition-all duration-200 flex items-center gap-2"
+                            className="bg-black text-white font-mono text-xs uppercase px-6 py-2 border-none rounded-none shadow-none flex items-center gap-2 cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-[16px]">play_arrow</span>
-                            Start Processing
+                            <span>PROCESS</span>
                           </button>
                         </div>
                       )}
 
                       {status === 'error' && (
-                        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-4 z-20">
-                          <span className="material-symbols-outlined text-red-400 text-[32px]">error</span>
-                          <div className="font-mono text-[11px] text-red-400 text-center max-w-sm px-4">
+                        <div className="absolute inset-0 bg-white flex flex-col items-center justify-center gap-4 z-20 border border-gray-200 rounded-none shadow-none">
+                          <div className="font-mono text-xs text-black text-center max-w-sm px-4 uppercase rounded-none shadow-none">
                             PROCESSING_ERROR: {errorMessage}
                           </div>
-                          <div className="flex gap-3 mt-2">
+                          <div className="flex gap-3 mt-2 rounded-none shadow-none">
                             <button
                               onClick={handleStartProcessing}
-                              className="font-mono text-[10px] tracking-wider uppercase px-4 py-2 border border-white/30 text-white/80 hover:bg-white/10 transition-colors"
+                              className="bg-black text-white font-mono text-xs uppercase px-4 py-2 border-none rounded-none shadow-none cursor-pointer"
                             >
-                              Retry
+                              RETRY
                             </button>
                             <button
                               onClick={handleNewStream}
-                              className="font-mono text-[10px] tracking-wider uppercase px-4 py-2 border border-white/30 text-white/80 hover:bg-white/10 transition-colors"
+                              className="bg-white text-black font-mono text-xs uppercase px-4 py-2 border border-gray-200 rounded-none shadow-none cursor-pointer"
                             >
-                              New Stream
+                              NEW STREAM
                             </button>
                           </div>
                         </div>
@@ -330,90 +313,64 @@ export default function DashboardPage() {
             </div>
 
             {/* Sliding Ledger Side Panel */}
-            <div className={`h-full bg-[#FAFAFA] border-l border-[#E5E7EB] transition-all duration-500 overflow-hidden flex flex-col ${status === 'processing' ? 'w-1/3 opacity-100' : 'w-0 opacity-0 border-l-0'}`}>
-               <div className="p-4 border-b border-[#E5E7EB] shrink-0">
-                 <span className="font-mono text-[10px] tracking-widest uppercase font-bold text-primary">Active Background Ledger</span>
+            <div className={`h-full bg-white transition-all duration-500 overflow-hidden flex flex-col rounded-none shadow-none ${status === 'processing' ? 'w-1/3 opacity-100 border-l border-gray-200' : 'w-0 opacity-0 border-none'}`}>
+               <div className="p-4 border-b border-gray-200 shrink-0 rounded-none shadow-none bg-white">
+                 <span className="font-serif text-xl uppercase text-black rounded-none shadow-none">LOGS</span>
                </div>
-               <div className="flex-1 p-4 overflow-y-auto font-mono text-[10px] space-y-2 bg-[#FAFAFA]">
-                 <div className="text-gray-500">14:02:00 [SYS] Establishing worker node...</div>
-                 <div className="text-gray-500">14:02:01 [SYS] Analyzing stream segments...</div>
-                 <div className="text-gray-500">14:02:02 [SYS] Chunking media payload...</div>
-                 <div className="text-gray-500">14:02:03 [SYS] Allocating memory pool...</div>
-                 <div className="text-primary animate-pulse mt-4">ENGINE_PROCESSING_ACTIVE</div>
-               </div>
+               <ul className="flex-1 p-4 overflow-y-auto font-mono text-xs space-y-1 bg-white list-none m-0 text-black rounded-none shadow-none">
+                 <li>14:02:00 [SYS] Establishing worker node...</li>
+                 <li>14:02:01 [SYS] Analyzing stream segments...</li>
+                 <li>14:02:02 [SYS] Chunking media payload...</li>
+                 <li>14:02:03 [SYS] Allocating memory pool...</li>
+                 <li className="mt-4 uppercase">ENGINE_PROCESSING_ACTIVE</li>
+               </ul>
             </div>
           </div>
 
           {/* Bottom Half: Performance Monitoring */}
-          <div className="flex-1 flex flex-col lg:flex-row">
+          <div className="flex-1 flex flex-col lg:flex-row rounded-none shadow-none bg-white">
             {/* Chart 1: Pipeline Latency */}
-            <div className="flex-1 border-r border-[#E5E7EB] flex flex-col p-6 relative">
-              <div className="flex justify-between items-center mb-6">
-                <span className="tiny-mono tracking-widest uppercase text-primary font-bold">
+            <div className="flex-1 border-r border-gray-200 flex flex-col p-6 relative rounded-none shadow-none bg-white">
+              <div className="flex justify-between items-center mb-6 rounded-none shadow-none">
+                <span className="font-serif text-xl text-black uppercase rounded-none shadow-none">
                   Pipeline Latency (ms)
                 </span>
-                <div className="flex items-center gap-1">
-                  <span className="w-1 h-1 bg-primary"></span>
-                  <span className="tiny-mono">LIVE</span>
+                <div className="flex items-center gap-2 rounded-none shadow-none">
+                  <span className="font-mono text-xs text-black uppercase rounded-none shadow-none">LIVE</span>
                 </div>
               </div>
-              <div className="flex-1 min-h-[250px]">
+              <div className="flex-1 min-h-[250px] rounded-none shadow-none bg-white">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={latencyData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="#E5E7EB"
-                      vertical={false}
-                    />
                     <XAxis
                       dataKey="time"
                       tick={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: 11,
-                        fill: "#6B7280",
+                        fontFamily: "monospace",
+                        fontSize: 10,
+                        fill: "#9CA3AF",
                       }}
-                      axisLine={{ stroke: "#E5E7EB" }}
+                      axisLine={false}
                       tickLine={false}
                     />
                     <YAxis
                       domain={[0, 120]}
                       ticks={[0, 40, 80, 120]}
                       tick={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: 11,
-                        fill: "#6B7280",
+                        fontFamily: "monospace",
+                        fontSize: 10,
+                        fill: "#9CA3AF",
                       }}
                       axisLine={false}
                       tickLine={false}
                       width={35}
                     />
-                    <Tooltip
-                      contentStyle={{
-                        background: "#1b1b1b",
-                        border: "none",
-                        borderRadius: "0px",
-                        fontFamily: "var(--font-mono)",
-                        fontSize: 12,
-                        color: "#ffffff",
-                      }}
-                      labelStyle={{ color: "#848484" }}
-                      formatter={(value) => [
-                        `${value}ms`,
-                        "Latency",
-                      ]}
-                    />
                     <Line
                       type="monotone"
                       dataKey="value"
                       stroke="#000000"
-                      strokeWidth={1.5}
+                      strokeWidth={1}
                       dot={false}
-                      activeDot={{
-                        r: 4,
-                        fill: "#000000",
-                        stroke: "#ffffff",
-                        strokeWidth: 2,
-                      }}
+                      isAnimationActive={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -421,73 +378,47 @@ export default function DashboardPage() {
             </div>
 
             {/* Chart 2: Throughput */}
-            <div className="flex-1 flex flex-col p-6 relative border-r border-[#E5E7EB]">
-              <div className="flex justify-between items-center mb-6">
-                <span className="tiny-mono tracking-widest uppercase text-primary font-bold">
+            <div className="flex-1 border-r border-gray-200 flex flex-col p-6 relative rounded-none shadow-none bg-white">
+              <div className="flex justify-between items-center mb-6 rounded-none shadow-none">
+                <span className="font-serif text-xl text-black uppercase rounded-none shadow-none">
                   Throughput (MB/s)
                 </span>
-                <div className="flex items-center gap-1">
-                  <span className="w-1 h-1 bg-primary"></span>
-                  <span className="tiny-mono">LIVE</span>
+                <div className="flex items-center gap-2 rounded-none shadow-none">
+                  <span className="font-mono text-xs text-black uppercase rounded-none shadow-none">LIVE</span>
                 </div>
               </div>
-              <div className="flex-1 min-h-[250px]">
+              <div className="flex-1 min-h-[250px] rounded-none shadow-none bg-white">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={throughputData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="#E5E7EB"
-                      vertical={false}
-                    />
                     <XAxis
                       dataKey="time"
                       tick={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: 11,
-                        fill: "#6B7280",
+                        fontFamily: "monospace",
+                        fontSize: 10,
+                        fill: "#9CA3AF",
                       }}
-                      axisLine={{ stroke: "#E5E7EB" }}
+                      axisLine={false}
                       tickLine={false}
                     />
                     <YAxis
                       domain={[0, 1000]}
                       ticks={[0, 500, 750, 1000]}
                       tick={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: 11,
-                        fill: "#6B7280",
+                        fontFamily: "monospace",
+                        fontSize: 10,
+                        fill: "#9CA3AF",
                       }}
                       axisLine={false}
                       tickLine={false}
-                      width={40}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        background: "#1b1b1b",
-                        border: "none",
-                        borderRadius: "0px",
-                        fontFamily: "var(--font-mono)",
-                        fontSize: 12,
-                        color: "#ffffff",
-                      }}
-                      labelStyle={{ color: "#848484" }}
-                      formatter={(value) => [
-                        `${value} MB/s`,
-                        "Throughput",
-                      ]}
+                      width={35}
                     />
                     <Line
                       type="monotone"
                       dataKey="value"
                       stroke="#000000"
-                      strokeWidth={1.5}
+                      strokeWidth={1}
                       dot={false}
-                      activeDot={{
-                        r: 4,
-                        fill: "#000000",
-                        stroke: "#ffffff",
-                        strokeWidth: 2,
-                      }}
+                      isAnimationActive={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -495,42 +426,44 @@ export default function DashboardPage() {
             </div>
 
             {/* Section 3: Job Ledger */}
-            <div className="flex-1 flex flex-col p-6 relative">
-              <div className="flex justify-between items-center mb-6">
-                <span className="tiny-mono tracking-widest uppercase text-primary font-bold">
+            <div className="flex-1 flex flex-col p-6 relative rounded-none shadow-none bg-white">
+              <div className="flex justify-between items-center mb-6 rounded-none shadow-none">
+                <span className="font-serif text-xl text-black uppercase rounded-none shadow-none">
                   Asynchronous Job Ledger
                 </span>
               </div>
-              <div className="flex-1 overflow-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead className="border-b border-[#E5E7EB]">
+              <div className="flex-1 overflow-auto rounded-none shadow-none bg-white">
+                <table className="w-full text-left border-collapse rounded-none shadow-none bg-white">
+                  <thead className="border-b border-black rounded-none shadow-none">
                     <tr>
-                      <th className="py-1 font-bold text-[10px] tracking-wider text-on-surface-variant uppercase">
+                      <th className="py-2 font-mono text-xs font-bold text-black uppercase rounded-none shadow-none">
                         Job ID
                       </th>
-                      <th className="py-1 font-bold text-[10px] tracking-wider text-on-surface-variant uppercase">
+                      <th className="py-2 font-mono text-xs font-bold text-black uppercase rounded-none shadow-none">
                         Source
                       </th>
-                      <th className="py-1 font-bold text-[10px] tracking-wider text-on-surface-variant uppercase">
+                      <th className="py-2 font-mono text-xs font-bold text-black uppercase rounded-none shadow-none">
                         Engine Status
                       </th>
-                      <th className="py-1 font-bold text-[10px] tracking-wider text-on-surface-variant uppercase">
+                      <th className="py-2 font-mono text-xs font-bold text-black uppercase rounded-none shadow-none">
                         Action
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="tiny-mono">
+                  <tbody className="rounded-none shadow-none">
                     {jobs.map((job) => (
                       <tr
                         key={job.id}
-                        className="border-b border-[#E5E7EB]"
+                        className="border-b border-gray-200 rounded-none shadow-none"
                       >
-                        <td className="py-2">{job.id}</td>
-                        <td className="py-2">{job.source}</td>
-                        <td className="py-2 font-code-md">{job.status}</td>
-                        <td className="py-2">
+                        <td className="py-3 font-mono text-xs text-black rounded-none shadow-none">{job.id}</td>
+                        <td className="py-3 font-mono text-xs text-black rounded-none shadow-none">{job.source}</td>
+                        <td className="py-3 font-mono text-xs text-black uppercase rounded-none shadow-none">
+                          {job.status.replace(/\[|\]/g, '')}
+                        </td>
+                        <td className="py-3 font-mono text-xs text-black rounded-none shadow-none">
                           {job.action ? (
-                            <button className="font-code-md text-[12px] text-primary underline">
+                            <button className="font-mono text-xs text-black uppercase underline border-none bg-transparent rounded-none shadow-none cursor-pointer p-0">
                               {job.action}
                             </button>
                           ) : (
