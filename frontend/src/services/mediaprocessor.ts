@@ -1,8 +1,8 @@
 //take the data from form and chunk the video 
 import {v4 as uuidv4} from 'uuid';
 import ApiService from './apiservice';
-import { MediaBucketRequestPayload } from './apiservice';
-const mediaHandler = async (data: FormData) => {
+import { MediaBucketRequestPayload, RequestPayload } from './apiservice';
+const mediaHandler = async (data: FormData, token: string) => {
 
     //get the video
 
@@ -41,6 +41,22 @@ const mediaHandler = async (data: FormData) => {
           throw new Error("Failed to upload chunk");
       }
       chunkUrl.push(secureUrl);
+
+      //call the createjob api to create the job
+      const createJobPayload: RequestPayload = {
+        video_url: secureUrl,
+        bitrate: "360p",
+        content_length: filesize.toString(),
+        file_name: fileName,
+      };
+
+
+      const job_response = await ApiService.createJob(createJobPayload, token);
+      if(!job_response){
+        throw new Error("Failed to create job");
+      }
+      return job_response;
+
     }
 
 } 
