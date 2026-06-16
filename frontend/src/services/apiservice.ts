@@ -1,10 +1,18 @@
 import axios from "axios";
 
-interface RequestPayload {
+export interface RequestPayload {
     file_name: string,
     video_url: string,
     bitrate: string,
     content_length: string,
+}
+
+export interface MediaBucketRequestPayload {
+    file_name: string,
+    mediaFile: File,
+    resourceType: string,
+    contentRange?: number | null,
+    uploadId?: string | null,
 }
 
 //create the class component and extend the api service file 
@@ -15,18 +23,30 @@ class ApiSystem {
     }
 
 
-    async uploadToMediaBucket(file: File){
+    async uploadToMediaBucket(payload :MediaBucketRequestPayload){
         //get the cloudinary url
         //push the files in chunks to the cloudinary
+        //get uploadPreset from the env 
+        const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET;
+        if (!uploadPreset){
+            throw new Error("Upload preset not found");
+        }
+        
         try { 
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", payload.mediaFile);
+        formData.append("upload_preset", uploadPreset) 
+        const headers = {
+            "Content-Type": "multipart/form-data",
+        };
+        //only add chunk upload headers when provided
+
+        
         const response = await axios.post(`${this.baseURL}/upload`, formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
+            headers,
         });
         return response.data;
+        
         }catch (error){
             console.error("Error uploading file:", error);
             throw error;
