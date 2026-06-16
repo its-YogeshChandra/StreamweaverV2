@@ -10,7 +10,7 @@ export interface RequestPayload {
 export interface MediaBucketRequestPayload {
     file_name: string,
     mediaFile: Blob,
-    resourceType: string,
+    resourceType: string | "auto",
     contentRange?: string | null,
     uploadId?: string | null,
 }
@@ -22,8 +22,9 @@ class ApiSystem {
         this.baseURL = baseURL;
     }
 
-
+    //function to upload the media to the bucket
     async uploadToMediaBucket(payload :MediaBucketRequestPayload){
+       const url = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUD_NAME}/${payload.resourceType || "video"}/upload`;
 
         const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET;
         if (!uploadPreset){
@@ -64,7 +65,7 @@ class ApiSystem {
         }
     }
 
-
+//function to create job 
     async createJob(payload: RequestPayload, token: string) {
 
         try {
@@ -88,5 +89,5 @@ class ApiSystem {
 }
 
 //get the base url from the env file || will get latch into proxying in future  
-const ApiService = new ApiSystem("http://localhost:5000");
+const ApiService = new ApiSystem("http://localhost:8080");
 export default ApiService;
