@@ -1,7 +1,12 @@
 import axios from "axios";
-interface RequestPayload {
 
+interface RequestPayload {
+    file_name: string,
+    video_url: string,
+    bitrate: string,
+    content_length: string,
 }
+
 //create the class component and extend the api service file 
 class ApiSystem {
     baseURL: string;

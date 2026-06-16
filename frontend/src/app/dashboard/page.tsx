@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Form from "next/form";
 import { useState, useEffect } from "react";
 import {
   LineChart,
@@ -93,9 +94,9 @@ export default function DashboardPage() {
     setUploadProgress(0);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
+  const handleUploadAction = async (formData: FormData) => {
+    const file = formData.get('mediaFile') as File;
+    if (file && file.size > 0) {
       setVideoSrc(URL.createObjectURL(file));
       setStatus('uploading');
     }
@@ -233,10 +234,20 @@ export default function DashboardPage() {
                 <div className="relative w-full max-w-4xl aspect-video border border-[#E5E7EB] bg-[#FAFAFA] flex flex-col items-center justify-center overflow-hidden">
                   
                   {status === 'idle' && (
-                    <label className="absolute inset-0 flex flex-col items-center justify-center border-dashed border-gray-300 bg-white cursor-pointer hover:bg-gray-50 transition-colors z-20" style={{ borderWidth: '1px' }}>
-                      <input type="file" className="hidden" accept="video/*" onChange={handleFileSelect} />
-                      <h2 className="font-serif text-xl text-primary">Ingest Raw Media</h2>
-                    </label>
+                    <Form action={handleUploadAction} className="absolute inset-0 flex flex-col items-center justify-center border-dashed border-gray-300 bg-white hover:bg-gray-50 transition-colors z-20" style={{ borderWidth: '1px' }}>
+                      <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
+                        <input 
+                          type="file" 
+                          name="mediaFile" 
+                          className="hidden" 
+                          accept="video/*" 
+                          onChange={(e) => {
+                            if (e.target.form) e.target.form.requestSubmit();
+                          }} 
+                        />
+                        <h2 className="font-serif text-xl text-primary">Ingest Raw Media</h2>
+                      </label>
+                    </Form>
                   )}
 
                   {(status === 'uploading' || status === 'processing') && (
