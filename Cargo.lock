@@ -760,6 +760,7 @@ dependencies = [
  "jsonwebtoken 10.4.0",
  "reqwest",
  "serde",
+ "serde_json",
  "shared",
  "tokio",
  "uuid",

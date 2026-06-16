@@ -12,24 +12,17 @@ pub async fn decode_user(
     req: ServiceRequest,
     next: Next<impl MessageBody>,
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
-    match decode_headers(&req) {
-        Ok(headers) => {
-            let jwt = decode_jwt(headers);
-            match jwt {
-                Ok(user) => {
-                    // store user data in request extensions so handlers can access it
-                    req.extensions_mut().insert(user);
-                    
-                    // forward to the next handler
-                    next.call(req).await
-                }
-                Err(error) => {
-                    Err(ErrorUnauthorized(format!("Invalid token: {}", error)))
-                }
-            }
-        }
-        Err(error) => {
-            Err(ErrorUnauthorized(format!("Authorization failed: {}", error)))
-        }
-    }
+    // extract and validate the bearer token from headers
+    let headers = decode_headers(&req)
+        .map_err(|e| ErrorUnauthorized(format!("Authorization failed: {}", e)))?;
+
+    // decode and verify the Clerk JWT
+    let claims = decode_jwt(headers)
+        .map_err(|e| ErrorUnauthorized(format!("Invalid token: {}", e)))?;
+
+    // store user claims in request extensions so handlers can access it
+    req.extensions_mut().insert(claims);
+
+    // forward to the next handler
+    next.call(req).await
 }
