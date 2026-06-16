@@ -41,7 +41,10 @@ async fn main() -> std::io::Result<()>{
         };
 
         Job::update_job_status(&mut db_conn, update_job_request)
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, "Failed to update job status"))?;
+            .map_err(|e| {
+                eprintln!("[main] Failed to update job status: {:?}", e);
+                std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to update job status: {}", e))
+            })?;
 
         // ── Download from media bucket ──
         // Save to ../media/input/{job_id}.{ext} — this is where both branches expect the file

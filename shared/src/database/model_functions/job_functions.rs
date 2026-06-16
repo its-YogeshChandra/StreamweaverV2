@@ -99,14 +99,16 @@ pub fn update_job_status (conn: &mut PgConnection, job: UpdateJobRequest) -> Res
    //print the received payload 
    println!("Received payload: {:?}", job);
 
+   let filter_id = job.job_id;
+
    let change_set = UpdateJobStatus{
-    id: job.job_id,
+    id: filter_id,
     status: job.status,
     stage: job.stage,
    };
   
   //query database to update the job status 
-   let result = diesel::update(jobs.filter(id.eq(job.job_id))).set(&change_set).get_result(conn)?;
+   let result = diesel::update(jobs.filter(id.eq(filter_id))).set(&change_set).get_result(conn)?;
  
   //use match statement to handle the database query
    Ok(result)

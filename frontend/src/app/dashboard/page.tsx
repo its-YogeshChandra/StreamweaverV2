@@ -92,6 +92,7 @@ export default function DashboardPage() {
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleNewStream = () => {
     setShowStream(true);
@@ -141,77 +142,84 @@ export default function DashboardPage() {
   return (
     <div className="h-screen w-full flex overflow-hidden bg-[#FAFAFA]">
       {/* ─── Sidebar ─── */}
-      <aside className="bg-surface-container-low h-full w-64 border-r border-outline-variant hidden md:flex flex-col py-12 shrink-0 z-10">
-        <div className="px-4 mb-12">
-          <Link href="/" className="font-headline-md text-primary block">
-            Streamweaver
-          </Link>
-          <div className="mt-6">
-            <p className="font-code-md text-primary font-bold">
-              Project Alpha
-            </p>
-            <p className="font-label-caps text-on-surface-variant mt-1">
-              V-INFRA-NODE-01
-            </p>
+      <aside className={`bg-surface-container-low h-full shrink-0 z-30 transition-all duration-300 ${isSidebarOpen ? 'w-64 border-r border-outline-variant' : 'w-0 overflow-hidden'}`}>
+        <div className="w-64 h-full flex flex-col py-12">
+          <div className="px-4 mb-12">
+            <Link href="/" className="font-headline-md text-primary block">
+              Streamweaver
+            </Link>
+            <div className="mt-6">
+              <p className="font-code-md text-primary font-bold">
+                Project Alpha
+              </p>
+              <p className="font-label-caps text-on-surface-variant mt-1">
+                V-INFRA-NODE-01
+              </p>
+            </div>
           </div>
-        </div>
 
-        <nav className="flex-1 px-2 space-y-2">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href="#"
-              className={`flex items-center gap-4 px-4 py-2 transition-all duration-75 ${
-                item.active
-                  ? "bg-secondary-container text-on-secondary-container font-bold"
-                  : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
-              }`}
-            >
-              <span className="material-symbols-outlined">{item.icon}</span>
-              <span className="font-code-md">{item.label}</span>
-            </a>
-          ))}
-        </nav>
+          <nav className="flex-1 px-2 space-y-2">
+            {navItems.map((item) => (
+              <a
+                key={item.label}
+                href="#"
+                className={`flex items-center gap-4 px-4 py-2 transition-all duration-75 ${
+                  item.active
+                    ? "bg-secondary-container text-on-secondary-container font-bold"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+                }`}
+              >
+                <span className="material-symbols-outlined">{item.icon}</span>
+                <span className="font-code-md">{item.label}</span>
+              </a>
+            ))}
+          </nav>
 
-        <div className="px-4 mt-auto space-y-2">
-          <button 
-            onClick={handleNewStream}
-            className="w-full bg-primary text-on-primary font-code-md py-2 border border-primary hover:bg-transparent hover:text-primary transition-colors"
-          >
-            New Stream
-          </button>
-          <div className="border-t border-outline-variant pt-2 mt-4 space-y-2">
-            <a
-              href="#"
-              className="flex items-center gap-4 px-4 py-1 text-on-surface-variant hover:text-on-surface transition-all duration-75"
+          <div className="px-4 mt-auto space-y-2">
+            <button 
+              onClick={handleNewStream}
+              className="w-full bg-primary text-on-primary font-code-md py-2 border border-primary hover:bg-transparent hover:text-primary transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                menu_book
-              </span>
-              <span className="font-code-md text-[12px]">Documentation</span>
-            </a>
-            <a
-              href="#"
-              className="flex items-center gap-4 px-4 py-1 text-on-surface-variant hover:text-on-surface transition-all duration-75"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                contact_support
-              </span>
-              <span className="font-code-md text-[12px]">Support</span>
-            </a>
+              New Stream
+            </button>
+            <div className="border-t border-outline-variant pt-2 mt-4 space-y-2">
+              <a
+                href="#"
+                className="flex items-center gap-4 px-4 py-1 text-on-surface-variant hover:text-on-surface transition-all duration-75"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  menu_book
+                </span>
+                <span className="font-code-md text-[12px]">Documentation</span>
+              </a>
+              <a
+                href="#"
+                className="flex items-center gap-4 px-4 py-1 text-on-surface-variant hover:text-on-surface transition-all duration-75"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  contact_support
+                </span>
+                <span className="font-code-md text-[12px]">Support</span>
+              </a>
+            </div>
           </div>
         </div>
       </aside>
 
       {/* ─── Main Content Area ─── */}
       <main className="flex-1 flex flex-col h-full relative">
-        {/* Mobile Header */}
-        <header className="bg-surface w-full border-b border-outline-variant flex justify-between items-center px-4 py-4 md:hidden shrink-0 z-10">
-          <h1 className="font-headline-md font-bold text-primary">
-            Streamweaver
-          </h1>
+        {/* Header */}
+        <header className="bg-surface w-full border-b border-outline-variant flex justify-between items-center px-4 py-4 shrink-0 z-10">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-on-surface-variant hover:bg-surface-container transition-colors duration-150 p-1">
+              <span className="material-symbols-outlined">menu</span>
+            </button>
+            <h1 className="font-headline-md font-bold text-primary">
+              Streamweaver
+            </h1>
+          </div>
           <div className="flex gap-4">
-            <button className="text-on-surface-variant hover:bg-surface-container transition-colors duration-150 p-1">
+            <button className="text-on-surface-variant hover:bg-surface-container transition-colors duration-150 p-1 hidden sm:block">
               <span className="material-symbols-outlined">terminal</span>
             </button>
             <button className="text-on-surface-variant hover:bg-surface-container transition-colors duration-150 p-1">
@@ -224,19 +232,6 @@ export default function DashboardPage() {
             </button>
           </div>
         </header>
-
-        {/* Desktop Top Actions */}
-        <div className="absolute top-0 right-0 p-4 hidden md:flex gap-4 z-20">
-          <button className="text-on-surface-variant hover:bg-surface-container transition-colors duration-150 p-1">
-            <span className="material-symbols-outlined">terminal</span>
-          </button>
-          <button className="text-on-surface-variant hover:bg-surface-container transition-colors duration-150 p-1">
-            <span className="material-symbols-outlined">settings</span>
-          </button>
-          <button className="text-on-surface-variant hover:bg-surface-container transition-colors duration-150 p-1">
-            <span className="material-symbols-outlined">account_circle</span>
-          </button>
-        </div>
 
         {/* ─── Horizontal Split Layout ─── */}
         <div className="flex-1 flex flex-col">
