@@ -73,3 +73,5 @@ function createUniqueId(){
   // create 
   return uuidv4();
 }
+
+export { mediaHandler }

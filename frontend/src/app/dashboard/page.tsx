@@ -3,6 +3,9 @@
 import Link from "next/link";
 import Form from "next/form";
 import { useState, useEffect } from "react";
+import { mediaHandler } from "@/services/mediaprocessor";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import {
   LineChart,
   Line,
@@ -82,6 +85,8 @@ const navItems = [
 ];
 
 export default function DashboardPage() {
+  const { getToken } = useAuth();
+  const router = useRouter();
   const [showStream, setShowStream] = useState(true);
   const [status, setStatus] = useState<'idle' | 'uploading' | 'processing'>('idle');
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
@@ -99,6 +104,19 @@ export default function DashboardPage() {
     if (file && file.size > 0) {
       setVideoSrc(URL.createObjectURL(file));
       setStatus('uploading');
+
+      //call the media handler
+      const token = await getToken();
+      if(!token){
+        //redirect to the signin page 
+        router.push("/sign-in");
+        return;
+      }
+      const response = await mediaHandler(formData, token);
+      if(!response){
+        throw new Error("Failed to upload file");
+      }
+      setVideoSrc(response.video_url);
     }
   };
 
