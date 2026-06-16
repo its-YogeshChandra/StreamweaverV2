@@ -1,8 +1,8 @@
 //take the data from form and chunk the video 
 import {v4 as uuidv4} from 'uuid';
 import ApiService from './apiservice';
-
-const mediaProcessor = async (data: FormData) => {
+import { MediaBucketRequestPayload } from './apiservice';
+const mediaHandler = async (data: FormData) => {
 
     //get the video
 
@@ -18,7 +18,6 @@ const mediaProcessor = async (data: FormData) => {
     const uniqueUploadId = createUniqueId();
     const fileName = `sweaverV2/${uniqueUploadId}/${video.name}`;
 
-    //call the api to push the data into the cloudinary 
     const chunkUrl: string[] = [];
 
     for (let i = 0; i < totalChunks; i++) {
@@ -27,12 +26,22 @@ const mediaProcessor = async (data: FormData) => {
       const chunkBlob = video.slice(start, end);
       const contentRange = `bytes ${start}-${end-1}/${filesize}`
 
-      const secureUrl = await ApiService.uploadToMediaBucket()
+      //create the media payload 
+      const payload: MediaBucketRequestPayload = {
+          file_name: fileName,
+          mediaFile: chunkBlob,
+          resourceType: "video",
+          contentRange,
+          uploadId: uniqueUploadId,
+      }
+
+      //call the api to push data into bucket and get  secure url 
+      const secureUrl = await ApiService.uploadToMediaBucket(payload)
+      if(!secureUrl){
+          throw new Error("Failed to upload chunk");
+      }
+      chunkUrl.push(secureUrl);
     }
-
-
-
-
 
 } 
 

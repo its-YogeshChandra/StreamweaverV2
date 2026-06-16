@@ -9,9 +9,9 @@ export interface RequestPayload {
 
 export interface MediaBucketRequestPayload {
     file_name: string,
-    mediaFile: File,
+    mediaFile: Blob,
     resourceType: string,
-    contentRange?: number | null,
+    contentRange?: string | null,
     uploadId?: string | null,
 }
 
