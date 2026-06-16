@@ -2,7 +2,7 @@ use std::env;
 
 //function to decode the headers 
 use actix_web::{dev::{ServiceRequest}};
-use jsonwebtoken::{DecodingKey, Validation, Algorithm, decode, decode_header};
+use jsonwebtoken::{DecodingKey, Validation, Algorithm, decode};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug,Clone)]
