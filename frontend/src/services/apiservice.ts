@@ -1,4 +1,4 @@
-import axios from "axios"; 
+import axios from "axios";
 
 //create the class component and extend the api service file 
 class ApiSystem {
@@ -21,14 +21,12 @@ class ApiSystem {
         return response.data;
     }
 
-   async createJob(formData: FormData){
-    //get the backend endpoint url
-    //get 
-    //create the job in the backend
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-    };
+    async createJob(formData: FormData, token: string) {
+        // token is passed in from the caller via Clerk's useAuth().getToken()
+        const headers = {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+        };
         const response = await axios.post(`${this.baseURL}/jobs/create`, formData, {
             headers,
         });
