@@ -3,12 +3,10 @@ import {v4 as uuidv4} from 'uuid';
 import ApiService from './apiservice';
 import { MediaBucketRequestPayload, RequestPayload } from './apiservice';
 const mediaHandler = async (data: FormData, token: string) => {
-
     //get the video
-
      const video = data.get("mediaFile");
-    //chunk it according to the media size
-    if (!video || !(video instanceof File)) {
+    
+     if (!video || !(video instanceof File)) {
         throw new Error("No video file or not a file type");
     }
 
