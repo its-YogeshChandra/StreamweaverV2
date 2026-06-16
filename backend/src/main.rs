@@ -26,9 +26,10 @@ async fn main() -> Result<()>{
 
         App::new()
         .wrap(Logger::default())
-        .wrap(cors)
         .wrap(from_fn(decode_user))
+        .wrap(cors)
         .service(upload_video)
+
  //all the routes of the controller
 })
 .bind(("0.0.0.0", 8080))?
