@@ -55,9 +55,10 @@ const mediaHandler = async (data: FormData, token: string) => {
       //call the createjob api to create the job (only after full upload)
       const createJobPayload: RequestPayload = {
         video_url: secureUrl,
-        bitrate: "360p",
+        bitrate: (data.get("resolution") as string) || "1080p",
         content_length: filesize.toString(),
         file_name: fileName,
+        chunk_size: (data.get("chunkSize") as string) || "6s",
       };
 
       const job_response = await ApiService.createJob(createJobPayload, token);

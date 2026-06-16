@@ -5,6 +5,7 @@ export interface RequestPayload {
     video_url: string,
     bitrate: string,
     content_length: string,
+    chunk_size?: string,
 }
 
 export interface MediaBucketRequestPayload {

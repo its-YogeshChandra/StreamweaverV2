@@ -93,6 +93,8 @@ export default function DashboardPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [chunkSize, setChunkSize] = useState('6s');
+  const [resolution, setResolution] = useState('1080p');
 
   const handleNewStream = () => {
     setShowStream(true);
@@ -126,6 +128,8 @@ export default function DashboardPage() {
 
       const formData = new FormData();
       formData.append('mediaFile', selectedFile);
+      formData.append('chunkSize', chunkSize);
+      formData.append('resolution', resolution);
 
       const response = await mediaHandler(formData, token);
       if (!response) {
@@ -225,18 +229,19 @@ export default function DashboardPage() {
         </header>
 
         {/* ─── Horizontal Split Layout ─── */}
-        <div className="flex-1 flex flex-col rounded-none shadow-none">
+        <div className="flex-1 flex flex-col rounded-none shadow-none min-h-0">
           {/* Top Half: Media Workspace */}
-          <div className="flex-1 relative border-b border-gray-200 flex overflow-hidden bg-[#FAFAFA] rounded-none shadow-none">
-            <div className="absolute top-4 left-4 z-10 rounded-none shadow-none">
+          <div className="flex-[3] relative border-b border-gray-200 flex bg-[#FAFAFA] rounded-none shadow-none min-h-0">
+            <div className="absolute top-4 left-4 z-10 rounded-none shadow-none pointer-events-none">
               <span className="font-mono text-xs text-gray-500 uppercase rounded-none shadow-none">
                 WORKSPACE // MEDIA_WORKBENCH_01
               </span>
             </div>
             
-            <div className={`relative h-full flex items-center justify-center p-6 transition-all duration-500 rounded-none shadow-none ${status === 'processing' ? 'w-2/3' : 'w-full'}`}>
+            <div className={`h-full flex flex-col items-center p-6 pt-10 transition-all duration-500 rounded-none shadow-none overflow-y-auto ${status === 'processing' ? 'w-2/3' : 'w-full'}`}>
               {showStream && (
-                <div className="relative w-full max-w-4xl aspect-video bg-[#FAFAFA] flex flex-col items-center justify-center overflow-hidden rounded-none shadow-none border-none">
+                <div className="w-full max-w-4xl flex flex-col gap-4 shrink-0">
+                  <div className="relative w-full aspect-video bg-[#FAFAFA] flex flex-col items-center justify-center overflow-hidden rounded-none shadow-none border-none shrink-0">
                   
                   {status === 'idle' && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center border border-dashed border-gray-200 bg-transparent z-20 rounded-none shadow-none">
@@ -274,17 +279,6 @@ export default function DashboardPage() {
                         </div>
                       )}
 
-                      {status === 'preview' && (
-                        <div className="absolute bottom-4 right-4 flex items-center justify-end z-20 rounded-none shadow-none">
-                          <button
-                            onClick={handleStartProcessing}
-                            className="bg-black text-white font-mono text-xs uppercase px-6 py-2 border-none rounded-none shadow-none flex items-center gap-2 cursor-pointer"
-                          >
-                            <span>PROCESS</span>
-                          </button>
-                        </div>
-                      )}
-
                       {status === 'error' && (
                         <div className="absolute inset-0 bg-white flex flex-col items-center justify-center gap-4 z-20 border border-gray-200 rounded-none shadow-none">
                           <div className="font-mono text-xs text-black text-center max-w-sm px-4 uppercase rounded-none shadow-none">
@@ -309,6 +303,52 @@ export default function DashboardPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Configuration Panel & Trigger */}
+                {(status === 'preview' || status === 'uploading' || status === 'processing' || status === 'error') && (
+                  <div className="w-full border border-gray-200 bg-white flex flex-col rounded-none shadow-none">
+                    <div className="p-4 border-b border-gray-200 flex justify-between gap-6">
+                      <div className="flex-1 flex flex-col">
+                        <label className="font-mono text-[10px] text-gray-500 uppercase mb-2">HLS Chunk Length</label>
+                        <select 
+                          value={chunkSize}
+                          onChange={(e) => setChunkSize(e.target.value)}
+                          disabled={status !== 'preview'}
+                          className="bg-transparent border-b border-gray-300 font-mono text-xs p-1 rounded-none outline-none disabled:opacity-50"
+                        >
+                          <option value="2s">2 seconds</option>
+                          <option value="4s">4 seconds</option>
+                          <option value="6s">6 seconds</option>
+                          <option value="10s">10 seconds</option>
+                        </select>
+                      </div>
+                      <div className="flex-1 flex flex-col">
+                        <label className="font-mono text-[10px] text-gray-500 uppercase mb-2">Resolution / Bitrate</label>
+                        <select 
+                          value={resolution}
+                          onChange={(e) => setResolution(e.target.value)}
+                          disabled={status !== 'preview'}
+                          className="bg-transparent border-b border-gray-300 font-mono text-xs p-1 rounded-none outline-none disabled:opacity-50"
+                        >
+                          <option value="1080p">1080p (6000kbps)</option>
+                          <option value="720p">720p (3000kbps)</option>
+                          <option value="480p">480p (1500kbps)</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <button
+                        onClick={handleStartProcessing}
+                        disabled={status !== 'preview'}
+                        className={`w-full py-2 font-mono text-xs uppercase tracking-widest rounded-none shadow-none transition-colors border-none ${status === 'preview' ? 'bg-black text-white cursor-pointer' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                      >
+                        {status === 'preview' ? 'INITIALIZE ENGINE PIPELINE' : 'PROCESSING...'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+              </div>
               )}
             </div>
 
@@ -328,7 +368,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Bottom Half: Performance Monitoring */}
-          <div className="flex-1 flex flex-col lg:flex-row rounded-none shadow-none bg-white">
+          <div className="flex-[2] flex flex-col lg:flex-row rounded-none shadow-none bg-white min-h-0 overflow-hidden">
             {/* Chart 1: Pipeline Latency */}
             <div className="flex-1 border-r border-gray-200 flex flex-col p-6 relative rounded-none shadow-none bg-white">
               <div className="flex justify-between items-center mb-6 rounded-none shadow-none">
