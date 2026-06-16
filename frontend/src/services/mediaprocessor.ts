@@ -16,13 +16,12 @@ const mediaHandler = async (data: FormData, token: string) => {
     const uniqueUploadId = createUniqueId();
     const fileName = `sweaverV2/${uniqueUploadId}/${video.name}`;
 
-    const chunkUrl: string[] = [];
-
+    // Upload all chunks sequentially — only the final chunk returns a secure_url
     for (let i = 0; i < totalChunks; i++) {
-      const start = i*optimalChunkSize;
+      const start = i * optimalChunkSize;
       const end = Math.min(start + optimalChunkSize, filesize);
       const chunkBlob = video.slice(start, end);
-      const contentRange = `bytes ${start}-${end-1}/${filesize}`
+      const contentRange = `bytes ${start}-${end - 1}/${filesize}`;
 
       //create the media payload 
       const payload: MediaBucketRequestPayload = {
@@ -33,14 +32,27 @@ const mediaHandler = async (data: FormData, token: string) => {
           uploadId: uniqueUploadId,
       }
 
-      //call the api to push data into bucket and get  secure url 
-      const secureUrl = await ApiService.uploadToMediaBucket(payload)
-      if(!secureUrl){
-          throw new Error("Failed to upload chunk");
-      }
-      chunkUrl.push(secureUrl);
+      //call the api to push data into bucket
+      const response = await ApiService.uploadToMediaBucket(payload);
 
-      //call the createjob api to create the job
+      console.log(`Chunk ${i + 1}/${totalChunks} uploaded`, response);
+
+      // Intermediate chunks return {done: false} — only the final chunk 
+      // returns {done: true, secure_url: "..."}
+      if (i < totalChunks - 1) {
+        // Not the last chunk — just continue to next
+        continue;
+      }
+
+      // Final chunk — extract secure_url
+      const secureUrl = response.secure_url;
+      if (!secureUrl) {
+        throw new Error("Cloudinary did not return a secure_url after final chunk upload");
+      }
+
+      console.log("Upload complete, secure_url:", secureUrl);
+
+      //call the createjob api to create the job (only after full upload)
       const createJobPayload: RequestPayload = {
         video_url: secureUrl,
         bitrate: "360p",
@@ -48,15 +60,12 @@ const mediaHandler = async (data: FormData, token: string) => {
         file_name: fileName,
       };
 
-
       const job_response = await ApiService.createJob(createJobPayload, token);
-      if(!job_response){
+      if (!job_response) {
         throw new Error("Failed to create job");
       }
       return job_response;
-
     }
-
 } 
 
 function getOptimalChunkSize(totalBytes:number) {

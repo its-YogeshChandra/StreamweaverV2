@@ -15,6 +15,12 @@ export interface MediaBucketRequestPayload {
     uploadId?: string | null,
 }
 
+export interface CloudinaryUploadResponse {
+    secure_url?: string;
+    done?: boolean;
+    [key: string]: unknown;
+}
+
 //create the class component and extend the api service file 
 class ApiSystem {
     baseURL: string;
@@ -23,7 +29,7 @@ class ApiSystem {
     }
 
     //function to upload the media to the bucket
-    async uploadToMediaBucket(payload :MediaBucketRequestPayload){
+    async uploadToMediaBucket(payload: MediaBucketRequestPayload): Promise<CloudinaryUploadResponse> {
        const url = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUD_NAME}/${payload.resourceType || "video"}/upload`;
 
         const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET;
@@ -53,7 +59,10 @@ class ApiSystem {
                 console.log(`Upload Progress (${payload.file_name}):`, percentCompleted);
             }
         });
-        return response.data.secure_url;
+
+        // Return the full response data — intermediate chunks return {done: false},
+        // only the final chunk returns {done: true, secure_url: "..."}
+        return response.data;
         
         }catch (error){
             console.error("Error uploading file:", error);
@@ -71,7 +80,7 @@ class ApiSystem {
             "Authorization": `Bearer ${token}`,
         };
 
-      const response = await axios.post(`${this.baseURL}/jobs/create`, payload, {
+      const response = await axios.post(`${this.baseURL}/upload`, payload, {
             headers,
         });
         return response.data;
