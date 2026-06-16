@@ -35,9 +35,7 @@ class ApiSystem {
         const formData = new FormData();
         formData.append("file", payload.mediaFile);
         formData.append("upload_preset", uploadPreset) 
-        const headers: Record<string, string> = {
-            "Content-Type": "multipart/form-data",
-        };
+        const headers: Record<string, string> = {};
 
         //only add chunk upload headers when provided 
         if ( payload.uploadId) {
@@ -47,12 +45,10 @@ class ApiSystem {
             headers['Content-Range'] = payload.contentRange;
         }       
 
-        const response = await axios.post(`${this.baseURL}/upload`, formData, {
+        const response = await axios.post(url, formData, {
             headers,
             onUploadProgress: (progressEvent) => {
-                if (!progressEvent.total) {
-                    throw new Error("Upload progress total not found");
-                };
+                if (!progressEvent.total) return;
                 const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                 console.log(`Upload Progress (${payload.file_name}):`, percentCompleted);
             }

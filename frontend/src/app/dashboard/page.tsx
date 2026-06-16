@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Form from "next/form";
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { mediaHandler } from "@/services/mediaprocessor";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -88,53 +88,55 @@ export default function DashboardPage() {
   const { getToken } = useAuth();
   const router = useRouter();
   const [showStream, setShowStream] = useState(true);
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'processing'>('idle');
+  const [status, setStatus] = useState<'idle' | 'preview' | 'uploading' | 'processing' | 'error'>('idle');
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleNewStream = () => {
     setShowStream(true);
     setStatus('idle');
     setVideoSrc(null);
-    setUploadProgress(0);
+    setSelectedFile(null);
+    setErrorMessage(null);
   };
 
-  const handleUploadAction = async (formData: FormData) => {
-    const file = formData.get('mediaFile') as File;
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file && file.size > 0) {
+      setSelectedFile(file);
       setVideoSrc(URL.createObjectURL(file));
-      setStatus('uploading');
+      setStatus('preview');
+      setErrorMessage(null);
+    }
+  };
 
-      //call the media handler
+  const handleStartProcessing = async () => {
+    if (!selectedFile) return;
+
+    setStatus('uploading');
+
+    try {
       const token = await getToken();
-      if(!token){
-        //redirect to the signin page 
+      if (!token) {
         router.push("/sign-in");
         return;
       }
+
+      const formData = new FormData();
+      formData.append('mediaFile', selectedFile);
+
       const response = await mediaHandler(formData, token);
-      if(!response){
-        throw new Error("Failed to upload file");
+      if (!response) {
+        throw new Error("Failed to process file");
       }
-      setVideoSrc(response.video_url);
+      setStatus('processing');
+    } catch (error) {
+      console.error("Processing error:", error);
+      setErrorMessage(error instanceof Error ? error.message : "An unexpected error occurred");
+      setStatus('error');
     }
   };
-
-  useEffect(() => {
-    if (status === 'uploading') {
-      const interval = setInterval(() => {
-        setUploadProgress(p => {
-          if (p >= 100) {
-            clearInterval(interval);
-            setStatus('processing');
-            return 100;
-          }
-          return p + 5;
-        });
-      }, 100);
-      return () => clearInterval(interval);
-    }
-  }, [status]);
 
   return (
     <div className="h-screen w-full flex overflow-hidden bg-[#FAFAFA]">
@@ -252,23 +254,20 @@ export default function DashboardPage() {
                 <div className="relative w-full max-w-4xl aspect-video border border-[#E5E7EB] bg-[#FAFAFA] flex flex-col items-center justify-center overflow-hidden">
                   
                   {status === 'idle' && (
-                    <Form action={handleUploadAction} className="absolute inset-0 flex flex-col items-center justify-center border-dashed border-gray-300 bg-white hover:bg-gray-50 transition-colors z-20" style={{ borderWidth: '1px' }}>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center border-dashed border-gray-300 bg-white hover:bg-gray-50 transition-colors z-20" style={{ borderWidth: '1px' }}>
                       <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
                         <input 
                           type="file" 
-                          name="mediaFile" 
                           className="hidden" 
                           accept="video/*" 
-                          onChange={(e) => {
-                            if (e.target.form) e.target.form.requestSubmit();
-                          }} 
+                          onChange={handleFileSelect}
                         />
                         <h2 className="font-serif text-xl text-primary">Ingest Raw Media</h2>
                       </label>
-                    </Form>
+                    </div>
                   )}
 
-                  {(status === 'uploading' || status === 'processing') && (
+                  {(status === 'preview' || status === 'uploading' || status === 'processing' || status === 'error') && (
                     <div className="absolute inset-0 z-10 bg-black">
                       {videoSrc && (
                         <video src={videoSrc} className="w-full h-full object-cover" autoPlay muted loop playsInline />
@@ -276,8 +275,8 @@ export default function DashboardPage() {
                       
                       {status === 'uploading' && (
                         <>
-                          <div className="absolute bottom-0 left-0 h-px bg-black transition-all duration-100 ease-linear" style={{ width: `${uploadProgress}%` }}></div>
-                          <div className="absolute bottom-4 left-4 font-mono text-[10px] text-white bg-black/50 px-2 py-1">
+                          <div className="absolute bottom-0 left-0 h-px bg-primary w-full animate-pulse"></div>
+                          <div className="absolute bottom-4 left-4 font-mono text-[10px] text-white bg-black/50 px-2 py-1 animate-pulse">
                             UPLINKING_RAW_PAYLOAD...
                           </div>
                         </>
@@ -290,6 +289,44 @@ export default function DashboardPage() {
                             ENGINE_PROCESSING_ACTIVE
                           </div>
                         </>
+                      )}
+
+                      {status === 'preview' && (
+                        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-center justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent z-20">
+                          <div className="font-mono text-[10px] text-white/60 tracking-widest uppercase">
+                            Payload_Ready // Awaiting_Dispatch
+                          </div>
+                          <button
+                            onClick={handleStartProcessing}
+                            className="bg-primary text-on-primary font-mono text-[11px] tracking-wider uppercase px-6 py-2.5 border border-primary hover:bg-transparent hover:text-white transition-all duration-200 flex items-center gap-2"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">play_arrow</span>
+                            Start Processing
+                          </button>
+                        </div>
+                      )}
+
+                      {status === 'error' && (
+                        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-4 z-20">
+                          <span className="material-symbols-outlined text-red-400 text-[32px]">error</span>
+                          <div className="font-mono text-[11px] text-red-400 text-center max-w-sm px-4">
+                            PROCESSING_ERROR: {errorMessage}
+                          </div>
+                          <div className="flex gap-3 mt-2">
+                            <button
+                              onClick={handleStartProcessing}
+                              className="font-mono text-[10px] tracking-wider uppercase px-4 py-2 border border-white/30 text-white/80 hover:bg-white/10 transition-colors"
+                            >
+                              Retry
+                            </button>
+                            <button
+                              onClick={handleNewStream}
+                              className="font-mono text-[10px] tracking-wider uppercase px-4 py-2 border border-white/30 text-white/80 hover:bg-white/10 transition-colors"
+                            >
+                              New Stream
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}
