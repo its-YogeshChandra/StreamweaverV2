@@ -24,9 +24,7 @@ class ApiSystem {
 
 
     async uploadToMediaBucket(payload :MediaBucketRequestPayload){
-        //get the cloudinary url
-        //push the files in chunks to the cloudinary
-        //get uploadPreset from the env 
+
         const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET;
         if (!uploadPreset){
             throw new Error("Upload preset not found");
@@ -36,16 +34,29 @@ class ApiSystem {
         const formData = new FormData();
         formData.append("file", payload.mediaFile);
         formData.append("upload_preset", uploadPreset) 
-        const headers = {
+        const headers: Record<string, string> = {
             "Content-Type": "multipart/form-data",
         };
-        //only add chunk upload headers when provided
 
-        
+        //only add chunk upload headers when provided 
+        if ( payload.uploadId) {
+            headers['X-Unique-Upload-Id'] = payload.uploadId;
+        }
+        if ( payload.contentRange) {
+            headers['Content-Range'] = payload.contentRange;
+        }       
+
         const response = await axios.post(`${this.baseURL}/upload`, formData, {
             headers,
+            onUploadProgress: (progressEvent) => {
+                if (!progressEvent.total) {
+                    throw new Error("Upload progress total not found");
+                };
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                console.log(`Upload Progress (${payload.file_name}):`, percentCompleted);
+            }
         });
-        return response.data;
+        return response.data.secure_url;
         
         }catch (error){
             console.error("Error uploading file:", error);
