@@ -1,0 +1,49 @@
+#2 stage build process 
+
+#Stage 1 : using rust to create build 
+FROM rust:1.87-bookworm AS builder
+
+WORKDIR /app
+
+#copy the entire workspace 
+COPY Cargo.toml Cargo.lock ./
+
+#copy the workspace source
+COPY worker/ worker/
+COPY shared/ shared/ 
+COPY backend/ backend/
+COPY tests/ tests/
+
+#create the build 
+RUN cargo build --release -p worker 
+
+
+#Stage 2 : using debian bookworm
+#runtime 
+FROM debian:bookworm-slim AS runtime 
+
+#dependencies 
+RUN apt-get update && apt-get install -y --no-install-recommends \ 
+  ffmpeg \
+  openssl \
+  libpq5 \
+  ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+#Working Dir 
+WORKDIR /app/worker
+
+#copy the build from stage 1  
+COPY --from=builder /app/target/release/worker ./worker
+
+#copy the system prompt
+COPY config/chapter_system_prompt.txt /app/config/chapter_system_prompt.txt
+
+RUN mkdir -p media media/input media/processing/audio media/processing/tanscript media/output/playlist media/output/sprites media/output/chapters
+
+#keep the non root user permission 
+RUN useradd --create-home --shell /bin/bash appuser
+
+
+#run the worker
+CMD ["./worker"]

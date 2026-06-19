@@ -1,7 +1,7 @@
-
+# ============================================================
 # backend/Containerfile — Multi-stage Rust build for backend
 # Option A: Entrypoint script runs diesel migrations at startup
-
+# ============================================================
 
 # ---- Stage 1: Builder ----
 FROM rust:1.87-bookworm AS builder
