@@ -1,5 +1,6 @@
 use redis::TypedCommands;
 use serde::{Serialize, Deserialize};
+use std::env;
 
 //can put the optimize things into one section 
 #[derive(Deserialize, Serialize, Debug)]
@@ -16,13 +17,13 @@ pub struct RedisResponse {
 }
 
 pub fn set_job(payload: JobList) -> RedisResponse{
-
-    let client = redis::Client::open("redis://127.0.0.1:6379/").unwrap();
+    let redis_url  = env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379/".to_string()); 
+    let client = redis::Client::open(redis_url).unwrap();
     //get a conneciton from the client 
     let mut con = client.get_connection().unwrap();
     let queue_name = "joblist";
       
-    //convert the struct to json string 
+    //convert the struct to json str_ing 
     let json_string = serde_json::to_string(&payload).unwrap();  
      
      //push the element to the right
@@ -43,7 +44,8 @@ pub fn set_job(payload: JobList) -> RedisResponse{
 
 
 pub fn get_job() -> Option<JobList> {
-    let client = redis::Client::open("redis://127.0.0.1:6379/").unwrap();
+    let redis_url  = env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379/".to_string()); 
+    let client = redis::Client::open(redis_url).unwrap();
     let mut con = client.get_connection().unwrap();
     let queue_name = "joblist";
 

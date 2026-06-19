@@ -1,4 +1,5 @@
 use actix_web::{App, HttpServer, middleware::Logger, http::header, web};
+use std::env;
 use std::io::Result;
 mod controller;
 mod utilities;
@@ -15,18 +16,19 @@ async fn main() -> Result<()>{
     establish_connection().expect("Failed to connect to database");
 
     // Clerk JWKS config — shared across all workers
+    let jwks_url = env::var("CLERK_JWKS_URL").expect("CLERK_JWKS_URL not set");
+    let allowed_origins: Vec<String> = env::var("ALLOWED_ORIGINS").expect("ALLOWED_ORIGINS not set").split(",").map(|s| s.to_string()).collect();
     let clerk = ClerkConfig {
-        jwks_url: "https://stirred-foxhound-51.clerk.accounts.dev/.well-known/jwks.json".to_string(),
-        allowed_azp: vec![
-            "http://localhost:3000".to_string(),
-        ],
+        jwks_url,
+        allowed_azp: allowed_origins,
         http: reqwest::Client::new(),
     };
 
     HttpServer::new(move ||{
         //setup basic cors — created per-worker because Cors doesn't impl Clone
-        let cors = Cors::default()
-            .allowed_origin("http://localhost:3000")
+        let cors_allowed_origin = env::var("ALLOWED_ORIGINS").expect("ALLOWED_ORIGIN not set");
+            let cors = Cors::default()
+            .allowed_origin(&cors_allowed_origin)
             .allowed_methods(vec!["GET", "POST"])
             .allowed_headers(vec![header::AUTHORIZATION, header::CONTENT_TYPE])
             .max_age(3600);
