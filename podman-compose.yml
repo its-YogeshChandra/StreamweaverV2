@@ -88,5 +88,5 @@ services:
       - backend
 
 volumes:
-  pg_data:
+  pg_data: 
   media_data:
