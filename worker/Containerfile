@@ -1,49 +1,69 @@
-#2 stage build process 
+# worker/Containerfile — Multi-stage Rust build for worker
+# Heaviest container: includes ffmpeg, openssl, libpq
 
-#Stage 1 : using rust to create build 
+# ---- Stage 1: Builder ----
 FROM rust:1.87-bookworm AS builder
 
+#working dir 
 WORKDIR /app
 
-#copy the entire workspace 
+# Copy workspace-level files first (for dependency caching)
 COPY Cargo.toml Cargo.lock ./
 
-#copy the workspace source
+# Copy all workspace members needed for compilation
 COPY worker/ worker/
-COPY shared/ shared/ 
+COPY shared/ shared/
 COPY backend/ backend/
 COPY tests/ tests/
 
-#create the build 
-RUN cargo build --release -p worker 
+# Build the worker binary in release mode
+RUN cargo build --release -p worker
 
 
-#Stage 2 : using debian bookworm
-#runtime 
-FROM debian:bookworm AS runtime 
+# ---- Stage 2: Runtime ----
+FROM debian:bookworm AS runtime
 
-#dependencies 
-RUN apt-get update && apt-get install -y --no-install-recommends \ 
+# Install runtime dependencies:
+#   - ffmpeg:          WAV extraction, HLS transcode, sprite generation (includes ffprobe)
+#   - openssl:         AES-128 key generation via `openssl rand`
+#   - libpq5:          required by Diesel for PostgreSQL connections
+#   - ca-certificates: required for HTTPS (Gemini API, Cloudflare R2, Whisper server)
+RUN apt-get update && apt-get install -y --no-install-recommends \
   ffmpeg \
   openssl \
   libpq5 \
   ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-#Working Dir 
-WORKDIR /app/worker
-
-#copy the build from stage 1  
-COPY --from=builder /app/target/release/worker ./worker
-
-#copy the system prompt
-COPY config/chapter_system_prompt.txt /app/config/chapter_system_prompt.txt
-
-RUN mkdir -p media media/input media/processing/audio media/processing/tanscript media/output/playlist media/output/sprites media/output/chapters
-
-#keep the non root user permission 
+# Create non-root user for security (Podman runs rootless,
+# but this adds defense-in-depth)
 RUN useradd --create-home --shell /bin/bash appuser
 
+# Set working dir — the worker binary uses relative paths like
+# ../media/ and ../config/, so WORKDIR must be /app/worker
+WORKDIR /app/worker
 
-#run the worker
+# Copy the compiled worker binary from builder
+COPY --from=builder /app/target/release/worker ./worker
+
+# Copy the system prompt used by chapter generation
+COPY config/chapter_system_prompt.txt /app/config/chapter_system_prompt.txt
+
+# Create the media directory structure at /app/media/
+# (the worker accesses these via ../media/ relative paths from /app/worker/)
+# In production, /app/media is a named volume mount from podman-compose
+RUN mkdir -p /app/media/input \
+             /app/media/processing/audio \
+             /app/media/processing/transcript \
+             /app/media/output/playlist \
+             /app/media/output/sprites \
+             /app/media/output/chapters
+
+# Set ownership of app directories to non-root user
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Run the worker (no port exposed — worker pulls jobs from Redis)
 CMD ["./worker"]
