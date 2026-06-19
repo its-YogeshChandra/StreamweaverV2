@@ -18,7 +18,7 @@ RUN cmake -B build -DWHISPER_BUILD_SERVER=ON && \
     cmake --build build --config Release -j$(nproc)
 
 # Download the base model into the models/ directory
-RUN bash ./models/download-ggml-model.sh base
+RUN bash ./models/download-ggml-model.sh small 
 
 # Expose the server port
 EXPOSE 4000
