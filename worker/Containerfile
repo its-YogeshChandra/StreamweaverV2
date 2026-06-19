@@ -20,7 +20,7 @@ RUN cargo build --release -p worker
 
 #Stage 2 : using debian bookworm
 #runtime 
-FROM debian:bookworm-slim AS runtime 
+FROM debian:bookworm AS runtime 
 
 #dependencies 
 RUN apt-get update && apt-get install -y --no-install-recommends \ 
