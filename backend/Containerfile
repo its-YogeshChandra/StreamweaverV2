@@ -1,51 +1,69 @@
-#will run and create the build cache first then use the build artifacts to speed up subsequent Docker builds
-#Stage 1
-#rust language 
-FROM rust:1.87-bookworm AS builder 
 
-#the main working dir 
-WORKDIR /app 
+# backend/Containerfile — Multi-stage Rust build for backend
+# Option A: Entrypoint script runs diesel migrations at startup
 
-#copying the workspace level file first 
+
+# ---- Stage 1: Builder ----
+FROM rust:1.87-bookworm AS builder
+
+WORKDIR /app
+
+# Copy workspace-level files first (for dependency caching)
 COPY Cargo.toml Cargo.lock ./
 
-#Copy all the workspace member needed for compilation 
+# Copy all workspace members needed for compilation
 COPY backend/ backend/
 COPY shared/ shared/
 COPY worker/ worker/
 COPY tests/ tests/
 
-#output the file target/release/backend
-RUN cargo build --release -p backend 
+# Build the backend binary in release mode
+RUN cargo build --release -p backend
 
-#Stage 2
-#runtime image
+# Install diesel_cli (only with postgres feature, keeps it lighter)
+RUN cargo install diesel_cli --no-default-features --features postgres
+
+# ---- Stage 2: Runtime ----
 FROM debian:bookworm-slim AS runtime
 
-#install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+# Install runtime dependencies:
+#   - libpq5: required by Diesel + diesel_cli for PostgreSQL connections
+#   - ca-certificates: required for TLS (Clerk JWKS fetching, HTTPS calls)
+RUN apt-get update && apt-get install -y --no-install-recommends \
   libpq5 \
   ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-#copycopy the compiled backend binary from the builder stage
+# Copy the compiled backend binary from builder
 COPY --from=builder /app/target/release/backend ./backend
 
-#copy migration directory ( for diesel migration)
-COPY backend/migrations/ ./migrations/ 
+# Copy diesel_cli binary from builder (for running migrations at startup)
+COPY --from=builder /usr/local/cargo/bin/diesel /usr/local/bin/diesel
 
-#copy the public assets 
+# Copy migrations directory (for diesel migration run at startup)
+COPY backend/migrations/ ./migrations/
+
+# Copy diesel.toml (diesel_cli config)
+COPY backend/diesel.toml ./diesel.toml
+
+# Copy public assets
 COPY backend/public/ ./public/
 
-
-#create non root user ( as podman run rootless)
+# Create non-root user for security (Podman runs rootless,
+# but this adds defense-in-depth)
 RUN useradd --create-home --shell /bin/bash appuser
+
+# Copy the entrypoint script and make it executable
+COPY backend/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
+# Switch to non-root user
 USER appuser
 
-#will run at port 8080
+# Expose the actix-web port
 EXPOSE 8080
 
-
-CMD ["./backend"]
+# Use entrypoint script to run migrations then start the server
+ENTRYPOINT ["./entrypoint.sh"]
