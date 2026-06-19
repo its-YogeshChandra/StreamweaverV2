@@ -1,0 +1,51 @@
+#will run and create the build cache first then use the build artifacts to speed up subsequent Docker builds
+#Stage 1
+#rust language 
+FROM rust:1.87-bookworm AS builder 
+
+#the main working dir 
+WORKDIR /app 
+
+#copying the workspace level file first 
+COPY Cargo.toml Cargo.lock ./
+
+#Copy all the workspace member needed for compilation 
+COPY backend/ backend/
+COPY shared/ shared/
+COPY worker/ worker/
+COPY tests/ tests/
+
+#output the file target/release/backend
+RUN cargo build --release -p backend 
+
+#Stage 2
+#runtime image
+FROM debian:bookworm-slim AS runtime
+
+#install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+  libpq5 \
+  ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+#copycopy the compiled backend binary from the builder stage
+COPY --from=builder /app/target/release/backend ./backend
+
+#copy migration directory ( for diesel migration)
+COPY backend/migrations/ ./migrations/ 
+
+#copy the public assets 
+COPY backend/public/ ./public/
+
+
+#create non root user ( as podman run rootless)
+RUN useradd --create-home --shell /bin/bash appuser
+USER appuser
+
+#will run at port 8080
+EXPOSE 8080
+
+
+CMD ["./backend"]
