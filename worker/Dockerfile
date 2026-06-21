@@ -1,4 +1,4 @@
-# worker/Containerfile — Multi-stage Rust build for worker
+# worker/Dockerfile — Multi-stage Rust build for worker
 # Heaviest container: includes ffmpeg, openssl, libpq
 
 # ---- Stage 1: Builder ----
@@ -58,8 +58,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user for security (Podman runs rootless,
-# but this adds defense-in-depth)
+# Create non-root user for security
+# (adds defense-in-depth inside the container)
 RUN useradd --create-home --shell /bin/bash appuser
 
 # Set working dir — the worker binary uses relative paths like
@@ -74,7 +74,7 @@ COPY config/chapter_system_prompt.txt /app/config/chapter_system_prompt.txt
 
 # Create the media directory structure at /app/media/
 # (the worker accesses these via ../media/ relative paths from /app/worker/)
-# In production, /app/media is a named volume mount from podman-compose
+# In production, /app/media is a named volume mount from docker-compose
 RUN mkdir -p /app/media/input \
              /app/media/processing/audio \
              /app/media/processing/transcript \

@@ -1,5 +1,5 @@
 # ============================================================
-# backend/Containerfile — Multi-stage Rust build for backend
+# backend/Dockerfile — Multi-stage Rust build for backend
 # Option A: Entrypoint script runs diesel migrations at startup
 # ============================================================
 
@@ -74,8 +74,8 @@ COPY backend/diesel.toml ./diesel.toml
 # Copy public assets
 COPY backend/public/ ./public/
 
-# Create non-root user for security (Podman runs rootless,
-# but this adds defense-in-depth)
+# Create non-root user for security
+# (adds defense-in-depth inside the container)
 RUN useradd --create-home --shell /bin/bash appuser
 
 # Copy the entrypoint script and make it executable

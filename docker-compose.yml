@@ -3,7 +3,7 @@ version: "3.8"
 services:
 
   postgres:
-    image: docker.io/library/postgres:16-alpine
+    image: postgres:16-alpine
     container_name: sweaver-postgres-db
     environment:
       POSTGRES_DB: streamweaver
@@ -20,7 +20,7 @@ services:
       retries: 5  
 
   redis:
-    image: docker.io/library/redis:7-alpine
+    image: redis:7-alpine
     container_name: sweaver-redis
     ports:
       - "6379:6379"
@@ -33,7 +33,7 @@ services:
   whisper:
     build:
       context: ./whisper
-      dockerfile: Containerfile
+      dockerfile: Dockerfile
     container_name: sweaver-whisper
     ports:
       - "4000:4000"
@@ -41,11 +41,11 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Containerfile
+      dockerfile: backend/Dockerfile
     container_name: sweaver-backend
     ports:
       - "8080:8080"
-    env_file: .env.podman
+    env_file: .env.docker
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/streamweaver
       REDIS_URL: redis://redis:6379/
@@ -59,9 +59,9 @@ services:
   worker:
     build:
       context: .
-      dockerfile: worker/Containerfile
+      dockerfile: worker/Dockerfile
     container_name: sweaver-worker
-    env_file: .env.podman
+    env_file: .env.docker
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/streamweaver
       REDIS_URL: redis://redis:6379/
@@ -80,7 +80,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Containerfile
+      dockerfile: Dockerfile
     container_name: sweaver-frontend
     ports:
       - "3000:3000"
