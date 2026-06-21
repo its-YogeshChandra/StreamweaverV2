@@ -24,4 +24,4 @@ RUN bash ./models/download-ggml-model.sh small
 EXPOSE 4000
 
 # Run the server (binary is at build/bin/whisper-server, not ./server)
-CMD ["./build/bin/whisper-server", "-m", "./models/ggml-base.bin", "--host", "0.0.0.0", "--port", "4000"]
+CMD ["./build/bin/whisper-server", "-m", "./models/ggml-small.bin", "--host", "0.0.0.0", "--port", "4000"]

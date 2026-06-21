@@ -1,20 +1,17 @@
-version: "3.8"
-
 services:
 
   postgres:
     image: postgres:16-alpine
     container_name: sweaver-postgres-db
+    env_file: .env.docker
     environment:
       POSTGRES_DB: streamweaver
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pg_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready"]
       interval: 5s
       timeout: 5s
       retries: 5  
@@ -47,7 +44,6 @@ services:
       - "8080:8080"
     env_file: .env.docker
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/streamweaver
       REDIS_URL: redis://redis:6379/
     depends_on:
       postgres:
@@ -63,7 +59,6 @@ services:
     container_name: sweaver-worker
     env_file: .env.docker
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/streamweaver
       REDIS_URL: redis://redis:6379/
       WHISPER_SERVER_URL: http://whisper:4000
     volumes:

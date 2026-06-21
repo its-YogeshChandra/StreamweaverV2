@@ -1,7 +1,5 @@
-# ============================================================
 # backend/Dockerfile — Multi-stage Rust build for backend
-# Option A: Entrypoint script runs diesel migrations at startup
-# ============================================================
+#Entrypoint script runs diesel migrations at startup
 
 # ---- Stage 1: Builder ----
 FROM rust:1.91.1-bookworm AS builder
@@ -70,9 +68,6 @@ COPY backend/migrations/ ./migrations/
 
 # Copy diesel.toml (diesel_cli config)
 COPY backend/diesel.toml ./diesel.toml
-
-# Copy public assets
-COPY backend/public/ ./public/
 
 # Create non-root user for security
 # (adds defense-in-depth inside the container)
