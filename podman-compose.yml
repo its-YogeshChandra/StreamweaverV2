@@ -17,7 +17,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 5  
 
   redis:
     image: docker.io/library/redis:7-alpine
@@ -54,6 +54,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    image: sweaver-backend
 
   worker:
     build:
@@ -74,6 +75,7 @@ services:
         condition: service_healthy
       whisper:
         condition: service_started
+    image: sweaver-worker
 
   frontend:
     build:
@@ -86,6 +88,7 @@ services:
       NEXT_PUBLIC_API_URL: http://backend:8080
     depends_on:
       - backend
+    image: sweaver-frontend
 
 volumes:
   pg_data: 

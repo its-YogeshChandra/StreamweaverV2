@@ -2,7 +2,7 @@
 # Heaviest container: includes ffmpeg, openssl, libpq
 
 # ---- Stage 1: Builder ----
-FROM rust:1.87-bookworm AS builder
+FROM rust:1.91.1-bookworm AS builder
 
 #working dir 
 WORKDIR /app
