@@ -57,7 +57,6 @@ class ApiSystem {
             onUploadProgress: (progressEvent) => {
                 if (!progressEvent.total) return;
                 const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                console.log(`Upload Progress (${payload.file_name}):`, percentCompleted);
             }
         });
 

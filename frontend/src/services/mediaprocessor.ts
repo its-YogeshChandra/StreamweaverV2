@@ -35,8 +35,6 @@ const mediaHandler = async (data: FormData, token: string) => {
       //call the api to push data into bucket
       const response = await ApiService.uploadToMediaBucket(payload);
 
-      console.log(`Chunk ${i + 1}/${totalChunks} uploaded`, response);
-
       // Intermediate chunks return {done: false} — only the final chunk 
       // returns {done: true, secure_url: "..."}
       if (i < totalChunks - 1) {
@@ -49,8 +47,6 @@ const mediaHandler = async (data: FormData, token: string) => {
       if (!secureUrl) {
         throw new Error("Cloudinary did not return a secure_url after final chunk upload");
       }
-
-      console.log("Upload complete, secure_url:", secureUrl);
 
       //call the createjob api to create the job (only after full upload)
       const createJobPayload: RequestPayload = {
