@@ -69,9 +69,16 @@ COPY backend/migrations/ ./migrations/
 # Copy diesel.toml (diesel_cli config)
 COPY backend/diesel.toml ./diesel.toml
 
+# Create the shared/src directory that diesel.toml references for schema output
+# (diesel.toml: file = "../shared/src/schema.rs" resolves to /shared/src/ from /app)
+RUN mkdir -p /shared/src
+
 # Create non-root user for security
 # (adds defense-in-depth inside the container)
 RUN useradd --create-home --shell /bin/bash appuser
+
+# Give appuser ownership of the shared directory so diesel can write schema.rs
+RUN chown -R appuser:appuser /shared
 
 # Copy the entrypoint script and make it executable
 COPY backend/entrypoint.sh ./entrypoint.sh
