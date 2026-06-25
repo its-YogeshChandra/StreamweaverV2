@@ -76,12 +76,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL
     container_name: sweaver-frontend
     ports:
       - "3000:3000"
     env_file: .env.docker
-    args:
-      - NEXT_PUBLIC_API_URL
     depends_on:
       - backend
     image: sweaver-frontend
