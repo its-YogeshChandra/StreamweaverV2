@@ -32,9 +32,11 @@ COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
 # Copy source code
 COPY . .
 
-# Set build-time env vars
-ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_Jk8D7o7g43Xz59iE1wVnCjC2vB396F9G1yH9E4J7z9"
-ENV NEXT_PUBLIC_API_URL="http://backend:8080"
+# Set build-time env vars via ARGs (NEXT_PUBLIC_ vars are inlined at build time)
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 # Build the Next.js application
 RUN pnpm build
