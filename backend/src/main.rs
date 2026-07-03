@@ -15,20 +15,19 @@ async fn main() -> Result<()>{
 
     establish_connection().expect("Failed to connect to database");
 
-    // Clerk JWKS config — shared across all workers
+    // Clerk JWKS config
     let jwks_url = env::var("CLERK_JWKS_URL").expect("CLERK_JWKS_URL not set");
-    let allowed_origins: Vec<String> = env::var("ALLOWED_ORIGINS").expect("ALLOWED_ORIGINS not set").split(",").map(|s| s.to_string()).collect();
+    // Single allowed origin — used for both CORS and Clerk azp
+    let allowed_origin = env::var("ALLOWED_ORIGINS").expect("ALLOWED_ORIGIN not set");
     let clerk = ClerkConfig {
         jwks_url,
-        allowed_azp: allowed_origins,
+        allowed_azp: vec![allowed_origin.clone()],
         http: reqwest::Client::new(),
     };
 
     HttpServer::new(move ||{
-        //setup basic cors — created per-worker because Cors doesn't impl Clone
-        let cors_allowed_origin = env::var("ALLOWED_ORIGINS").expect("ALLOWED_ORIGIN not set");
-            let cors = Cors::default()
-            .allowed_origin(&cors_allowed_origin)
+        let cors = Cors::default()
+            .allowed_origin(&allowed_origin)
             .allowed_methods(vec!["GET", "POST"])
             .allowed_headers(vec![header::AUTHORIZATION, header::CONTENT_TYPE])
             .max_age(3600);
