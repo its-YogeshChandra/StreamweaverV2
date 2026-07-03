@@ -94,6 +94,6 @@ class ApiSystem {
 }
 
 //get the base url from the env file || will get latch into proxying in future  
-const ApiService = new ApiSystem("http://localhost:8080");
+const ApiService = new ApiSystem(process.env.NEXT_PUBLIC_API_URL || "https://api.streamweaver.seclan.live");
 export default ApiService;
    
