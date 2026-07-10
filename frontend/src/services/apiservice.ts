@@ -30,7 +30,10 @@ class ApiSystem {
     }
 
     //function to upload the media to the bucket
-    async uploadToMediaBucket(payload: MediaBucketRequestPayload): Promise<CloudinaryUploadResponse> {
+    async uploadToMediaBucket(
+        payload: MediaBucketRequestPayload,
+        onChunkProgress?: (percent: number) => void,
+    ): Promise<CloudinaryUploadResponse> {
        const url = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUD_NAME}/${payload.resourceType || "video"}/upload`;
 
         const uploadPreset = process.env.NEXT_PUBLIC_UPLOAD_PRESET;
@@ -57,6 +60,7 @@ class ApiSystem {
             onUploadProgress: (progressEvent) => {
                 if (!progressEvent.total) return;
                 const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                onChunkProgress?.(percentCompleted);
             }
         });
 

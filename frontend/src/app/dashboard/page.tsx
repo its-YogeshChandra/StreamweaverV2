@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { mediaHandler } from "@/services/mediaprocessor";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -95,6 +95,20 @@ export default function DashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [chunkSize, setChunkSize] = useState('6s');
   const [resolution, setResolution] = useState('1080p');
+  const [logs, setLogs] = useState<string[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll logs to bottom when new entries arrive
+  useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
+
+  const addLog = useCallback((message: string) => {
+    const now = new Date();
+    const ts = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setLogs(prev => [...prev, `${ts} ${message}`]);
+  }, []);
 
   const handleNewStream = () => {
     setShowStream(true);
@@ -102,6 +116,8 @@ export default function DashboardPage() {
     setVideoSrc(null);
     setSelectedFile(null);
     setErrorMessage(null);
+    setLogs([]);
+    setUploadProgress(0);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,27 +134,38 @@ export default function DashboardPage() {
     if (!selectedFile) return;
 
     setStatus('uploading');
+    setLogs([]);
+    setUploadProgress(0);
 
     try {
       const token = await getToken();
       if (!token) {
+        addLog('[ERROR] Authentication token not found. Redirecting to sign-in...');
         router.push("/sign-in");
         return;
       }
+
+      addLog('[SYS] Authentication verified. Starting pipeline...');
 
       const formData = new FormData();
       formData.append('mediaFile', selectedFile);
       formData.append('chunkSize', chunkSize);
       formData.append('resolution', resolution);
 
-      const response = await mediaHandler(formData, token);
+      const response = await mediaHandler(formData, token, {
+        onLog: addLog,
+        onProgress: setUploadProgress,
+      });
+
       if (!response) {
         throw new Error("Failed to process file");
       }
       setStatus('processing');
     } catch (error) {
       console.error("Processing error:", error);
-      setErrorMessage(error instanceof Error ? error.message : "An unexpected error occurred");
+      const msg = error instanceof Error ? error.message : "An unexpected error occurred";
+      addLog(`[ERROR] Pipeline failed: ${msg}`);
+      setErrorMessage(msg);
       setStatus('error');
     }
   };
@@ -238,7 +265,7 @@ export default function DashboardPage() {
               </span>
             </div>
             
-            <div className={`h-full flex flex-col items-center p-6 pt-10 transition-all duration-500 rounded-none shadow-none overflow-y-auto ${status === 'processing' ? 'w-2/3' : 'w-full'}`}>
+            <div className={`h-full flex flex-col items-center p-6 pt-10 transition-all duration-500 rounded-none shadow-none overflow-y-auto ${(status === 'uploading' || status === 'processing') ? 'w-2/3' : 'w-full'}`}>
               {showStream && (
                 <div className="w-full max-w-4xl flex flex-col gap-4 shrink-0">
                   <div className="relative w-full aspect-video bg-[#FAFAFA] flex flex-col items-center justify-center overflow-hidden rounded-none shadow-none border-none shrink-0">
@@ -353,16 +380,49 @@ export default function DashboardPage() {
             </div>
 
             {/* Sliding Ledger Side Panel */}
-            <div className={`h-full bg-white transition-all duration-500 overflow-hidden flex flex-col rounded-none shadow-none ${status === 'processing' ? 'w-1/3 opacity-100 border-l border-gray-200' : 'w-0 opacity-0 border-none'}`}>
+            <div className={`h-full bg-white transition-all duration-500 overflow-hidden flex flex-col rounded-none shadow-none ${(status === 'uploading' || status === 'processing') ? 'w-1/3 opacity-100 border-l border-gray-200' : 'w-0 opacity-0 border-none'}`}>
                <div className="p-4 border-b border-gray-200 shrink-0 rounded-none shadow-none bg-white">
-                 <span className="font-serif text-xl uppercase text-black rounded-none shadow-none">LOGS</span>
+                 <div className="flex justify-between items-center">
+                   <span className="font-serif text-xl uppercase text-black rounded-none shadow-none">LOGS</span>
+                   <span className="font-mono text-xs text-gray-500">{logs.length} entries</span>
+                 </div>
+                 {/* Upload progress bar */}
+                 {status === 'uploading' && (
+                   <div className="mt-3">
+                     <div className="flex justify-between items-center mb-1">
+                       <span className="font-mono text-[10px] text-gray-500 uppercase">Upload Progress</span>
+                       <span className="font-mono text-[10px] text-black font-bold">{uploadProgress}%</span>
+                     </div>
+                     <div className="w-full h-1.5 bg-gray-200 rounded-none overflow-hidden">
+                       <div
+                         className="h-full bg-black transition-all duration-300 ease-out"
+                         style={{ width: `${uploadProgress}%` }}
+                       />
+                     </div>
+                   </div>
+                 )}
                </div>
-               <ul className="flex-1 p-4 overflow-y-auto font-mono text-xs space-y-1 bg-white list-none m-0 text-black rounded-none shadow-none">
-                 <li>14:02:00 [SYS] Establishing worker node...</li>
-                 <li>14:02:01 [SYS] Analyzing stream segments...</li>
-                 <li>14:02:02 [SYS] Chunking media payload...</li>
-                 <li>14:02:03 [SYS] Allocating memory pool...</li>
-                 <li className="mt-4 uppercase">ENGINE_PROCESSING_ACTIVE</li>
+               <ul className="flex-1 p-4 overflow-y-auto font-mono text-[11px] leading-relaxed space-y-1 bg-white list-none m-0 text-black rounded-none shadow-none">
+                 {logs.length === 0 && (
+                   <li className="text-gray-400 italic">Waiting for pipeline events...</li>
+                 )}
+                 {logs.map((entry, idx) => (
+                   <li
+                     key={idx}
+                     className={`py-0.5 ${
+                       entry.includes('[ERROR]')
+                         ? 'text-red-600 font-bold'
+                         : entry.includes('[CHUNK]')
+                         ? 'text-gray-600'
+                         : entry.includes('[BUCKET]') || entry.includes('[JOB]')
+                         ? 'text-black font-medium'
+                         : 'text-gray-800'
+                     }`}
+                   >
+                     {entry}
+                   </li>
+                 ))}
+                 <div ref={logsEndRef} />
                </ul>
             </div>
           </div>
