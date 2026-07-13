@@ -17,7 +17,7 @@ pub struct JobList {
 //for broadcasting purposes
 
 //struct creation
-#[derive(Deserialize, Serialize, Debug)] 
+#[derive(Deserialize, Serialize, Debug, Clone)] 
 pub struct JobEvent {
  pub job_id: String, 
  pub stage: String, 
@@ -39,7 +39,20 @@ impl JobEvent {
         }
     }
 
-    pub async fn publish_job_event(&self, client: redis::Client, job_event: JobEvent) -> redis::RedisResult<()> {
+}
+
+pub fn get_client() -> redis::Client {
+    let redis_url  = env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379/".to_string()); 
+    let client = redis::Client::open(redis_url);
+    
+    match client {
+        Ok(client) => client,
+        Err(e) => panic!("Failed to connect to Redis: {}", e)
+    }
+}
+
+//function to publish job event 
+pub async fn publish_job_event(client: redis::Client, job_event: JobEvent) -> redis::RedisResult<()> {
         //get a conneciton from the client 
         let mut con = client.get_multiplexed_async_connection().await?;
 
@@ -53,10 +66,8 @@ impl JobEvent {
         
         Ok(())
     }
-}
 
-
-
+//function to subscribe to job events 
 pub async fn subscribe_and_relay (client: redis::Client, tx:broadcast::Sender<JobEvent>) -> redis::RedisResult<()>{
     // now we can receive messages on `sub` from any publisher
 
