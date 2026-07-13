@@ -1,6 +1,7 @@
-use redis::TypedCommands;
+use redis::{AsyncCommands, ErrorKind::{Client, InvalidClientConfig}, TypedCommands};
 use serde::{Serialize, Deserialize};
 use std::env;
+use tokio::sync::broadcast;
 
 //can put the optimize things into one section 
 #[derive(Deserialize, Serialize, Debug)]
@@ -10,6 +11,62 @@ pub struct JobList {
     pub video_url: String,
     pub bitrate: String,
     pub content_length: String,
+}
+
+//for broadcasting purposes
+
+//struct creation
+#[derive(Deserialize, Serialize, Debug)] 
+pub struct JobEvent {
+ pub job_id: String, 
+ pub stage: String, 
+ pub branch: String,
+ pub level : String,
+ pub timestamp: u64, 
+}
+
+
+impl JobEvent {
+    
+    pub fn new(job_id: String, stage: String, branch: String, level: String, timestamp: u64) -> Self {
+        JobEvent {
+            job_id,
+            stage,
+            branch,
+            level,
+            timestamp,
+        }
+    }
+
+    pub async fn publish_job_event(&self, client: redis::Client, job_event: JobEvent) -> redis::RedisResult<()> {
+        //get a conneciton from the client 
+        let mut con = client.get_multiplexed_async_connection().await?;
+
+        //publish the event : 
+
+        //createe event string (payload should be in string format)
+        let event_string = serde_json::to_string(&job_event).unwrap();
+        
+        //call the publish function 
+        let _: () = con.publish("job_events", event_string).await?;
+        
+        Ok(())
+    }
+}
+
+
+
+pub async fn subscribe_and_relay (client: redis::Client, tx:broadcast::Sender<JobEvent>) -> redis::RedisResult<()>{
+    // now we can receive messages on `sub` from any publisher
+
+    let mut pubsub = client.get_async_pubsub().await?;
+    pubsub.subscribe("job_events").await?;
+
+    let mut stream_value = pubsub.on_message();
+
+    while let Some(msg) = 
+        
+    Ok(())
 }
 
 pub struct RedisResponse {
