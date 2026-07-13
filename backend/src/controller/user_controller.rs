@@ -105,7 +105,7 @@ pub async fn get_job_events(path: web::Path<String>) -> HttpResponse {
     let mut pubsub = client.get_async_pubsub().await.unwrap();
     pubsub.subscribe("job_events").await.unwrap();
 
-    let msg_stream = pubsub.on_message();
+    let msg_stream = pubsub.into_on_message();
 
     // Transform the Redis message stream into an SSE byte stream
     // unfold carries (stream, job_id) as state, yields SSE-formatted Bytes
