@@ -2,6 +2,7 @@ use redis::{AsyncCommands, ErrorKind::{Client, InvalidClientConfig}, TypedComman
 use serde::{Serialize, Deserialize};
 use std::env;
 use tokio::sync::broadcast;
+use futures::StreamExt;
 
 //can put the optimize things into one section 
 #[derive(Deserialize, Serialize, Debug)]
@@ -64,7 +65,14 @@ pub async fn subscribe_and_relay (client: redis::Client, tx:broadcast::Sender<Jo
 
     let mut stream_value = pubsub.on_message();
 
-    while let Some(msg) = 
+    while let Some(msg) = stream_value.next().await {
+        let payload: String = msg.get_payload()?;
+        
+        // Deserialize the JSON payload into a JobEvent and broadcast it
+        if let Ok(job_event) = serde_json::from_str::<JobEvent>(&payload) {
+            let _ = tx.send(job_event);
+        }
+       } 
         
     Ok(())
 }
