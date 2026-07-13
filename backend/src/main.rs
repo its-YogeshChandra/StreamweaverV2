@@ -6,7 +6,7 @@ mod utilities;
 
 use actix_cors::Cors;
 use shared::establish_connection;
-use crate::controller::upload_video;
+use crate::controller::{upload_video, get_job_events};
 use crate::utilities::ClerkConfig;
 
 //create the actix server 
@@ -37,6 +37,7 @@ async fn main() -> Result<()>{
         .wrap(Logger::default())
         .wrap(cors)
         .service(upload_video)
+        .service(get_job_events)
  //all the routes of the controller
 })
 .bind(("0.0.0.0", 8080))?

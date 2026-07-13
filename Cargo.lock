@@ -770,6 +770,7 @@ dependencies = [
  "actix-web",
  "base64",
  "dotenvy",
+ "futures",
  "jsonwebtoken 10.4.0",
  "reqwest",
  "serde",

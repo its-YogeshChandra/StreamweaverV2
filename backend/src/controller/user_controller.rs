@@ -1,14 +1,19 @@
 use actix_web::{
-    HttpResponse, Responder, http::StatusCode, post, web
+    HttpResponse, Responder, http::StatusCode, post, get, web,
 };
 use shared::{
     job_functions::Job,
     redis_jobs::{set_job, JobList},
     establish_connection,
+    JobEvent,
+    get_client,
 };
 use uuid::Uuid; 
 use serde::{Deserialize, Serialize};
 use crate::utilities::AuthenticatedUser;
+use futures::StreamExt;
+use actix_web::web::Bytes;
+
 
 #[derive(Deserialize, Serialize)]
 pub struct RequestPayload {
@@ -17,7 +22,7 @@ pub struct RequestPayload {
     pub bitrate: String,
     pub content_length: String,
 }
-
+  
 
 #[derive(Serialize)]
 pub struct Response{
@@ -89,4 +94,63 @@ pub async fn upload_video (user: AuthenticatedUser, payload: web::Json<RequestPa
         HttpResponse::InternalServerError().body("Failed to upload video")
     }
 
+}
+
+#[get("/jobs/{job_id}/events")]
+pub async fn get_job_events(path: web::Path<String>) -> HttpResponse {
+    let job_id = path.into_inner();
+
+    // Connect to Redis pub/sub
+    let client = get_client();
+    let mut pubsub = client.get_async_pubsub().await.unwrap();
+    pubsub.subscribe("job_events").await.unwrap();
+
+    let msg_stream = pubsub.on_message();
+
+    // Transform the Redis message stream into an SSE byte stream
+    // unfold carries (stream, job_id) as state, yields SSE-formatted Bytes
+    let sse_stream = futures::stream::unfold(
+        (msg_stream, job_id),
+        |(mut stream, job_id)| async move {
+            while let Some(msg) = stream.next().await {
+                let payload: String = match msg.get_payload() {
+                    Ok(p) => p,
+                    Err(_) => continue,
+                };
+
+                let job_event: JobEvent = match serde_json::from_str(&payload) {
+                    Ok(e) => e,
+                    Err(_) => continue,
+                };
+
+                // Only send events for the requested job
+                if job_event.job_id != job_id {
+                    continue;
+                }
+
+                let is_terminal = job_event.stage == "job completed"
+                    || job_event.stage == "download failed";
+
+                // Format as SSE: "data: <json>\n\n"
+                let sse_data = format!("data: {}\n\n", payload);
+                let bytes: Result<Bytes, actix_web::Error> = Ok(Bytes::from(sse_data));
+
+                if is_terminal {
+                    // Return the final event, but pass None to end the stream
+                    return Some((bytes, (stream, job_id)));
+                }
+
+                return Some((bytes, (stream, job_id)));
+            }
+
+            // Stream ended (Redis disconnected)
+            None
+        },
+    );
+
+    HttpResponse::Ok()
+        .append_header(("Content-Type", "text/event-stream"))
+        .append_header(("Cache-Control", "no-cache"))
+        .append_header(("Connection", "keep-alive"))
+        .streaming(sse_stream)
 }
