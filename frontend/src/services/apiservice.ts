@@ -95,6 +95,38 @@ class ApiSystem {
     }
 }
 
+//function to get job logs from the server 
+async getJobLogs(jobId: string, token: string) {
+    try {
+        const headers = {
+            "Authorization": `Bearer ${token}`,
+        };
+        const response = await fetch(`${this.baseURL}/jobs/${jobId}/events`, {
+            headers,
+            cache: "no-cache"
+        });
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Response body is not readable");
+      }
+      const decoder = new TextDecoder();
+      
+      while (true){
+        const {done, value} = await reader.read();
+        
+        //break condition 
+        if (done) {
+            break;
+        }
+
+        const text = decoder.decode(value, {stream: true});
+
+      }
+    } catch (error) {
+        console.error("Error fetching job logs:", error);
+        throw error;
+    }
+}
 }
 
 //get the base url from the env file || will get latch into proxying in future  
