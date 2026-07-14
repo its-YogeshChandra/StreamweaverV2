@@ -3,6 +3,8 @@
 import Link from "next/link";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import ApiService from "@/services/apiservice";
+import type { JobEvent } from "@/services/apiservice";
 import { mediaHandler } from "@/services/mediaprocessor";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -98,7 +100,7 @@ export default function DashboardPage() {
   const [logs, setLogs] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const logsEndRef = useRef<HTMLDivElement>(null);
-
+  
   // Auto-scroll logs to bottom when new entries arrive
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -160,7 +162,24 @@ export default function DashboardPage() {
       if (!response) {
         throw new Error("Failed to process file");
       }
+
+      const jobId: string = response.job_id;
+      addLog(`[JOB] Job ID: ${jobId} — connecting to event stream...`);
       setStatus('processing');
+
+      // Fire-and-forget: stream backend events into the log panel
+      ApiService.getJobLogs(jobId, token, (event: JobEvent) => {
+        const branch = event.branch !== 'main' ? `[${event.branch.toUpperCase()}]` : '';
+        const prefix = event.level === 'error'
+          ? '[ERROR]'
+          : event.level === 'warning'
+          ? '[WARN]'
+          : '[ENGINE]';
+        addLog(`${prefix}${branch} ${event.stage.toUpperCase()}`);
+      }).catch((err) => {
+        addLog(`[ERROR] Event stream disconnected: ${err instanceof Error ? err.message : 'unknown'}`);
+      });
+
     } catch (error) {
       console.error("Processing error:", error);
       const msg = error instanceof Error ? error.message : "An unexpected error occurred";

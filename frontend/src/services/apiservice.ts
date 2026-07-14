@@ -8,6 +8,14 @@ export interface RequestPayload {
     chunk_size?: string,
 }
 
+export interface JobEvent {
+    job_id: string;
+    stage: string;
+    branch: string;
+    level: string;
+    timestamp: number;
+}
+
 export interface MediaBucketRequestPayload {
     file_name: string,
     mediaFile: Blob,
@@ -96,35 +104,52 @@ class ApiSystem {
 }
 
 //function to get job logs from the server 
-async getJobLogs(jobId: string, token: string) {
+async getJobLogs(
+    jobId: string,
+    token: string,
+    onEvent: (event: JobEvent) => void,
+): Promise<void> {
+    const response = await fetch(`${this.baseURL}/jobs/${jobId}/events`, {
+        headers: { "Authorization": `Bearer ${token}` },
+        cache: "no-cache",
+    });
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Response body is not readable");
+
+    const decoder = new TextDecoder();
+    let buffer = "";
+
     try {
-        const headers = {
-            "Authorization": `Bearer ${token}`,
-        };
-        const response = await fetch(`${this.baseURL}/jobs/${jobId}/events`, {
-            headers,
-            cache: "no-cache"
-        });
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error("Response body is not readable");
-      }
-      const decoder = new TextDecoder();
-      
-      while (true){
-        const {done, value} = await reader.read();
-        
-        //break condition 
-        if (done) {
-            break;
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            // Accumulate chunks — SSE frames end with \n\n
+            buffer += decoder.decode(value, { stream: true });
+
+            // Each complete SSE frame is separated by a blank line
+            const frames = buffer.split("\n\n");
+
+            // The last element is an incomplete frame — keep it in the buffer
+            buffer = frames.pop() ?? "";
+
+            for (const frame of frames) {
+                // Each frame can have multiple lines; find the "data:" line
+                for (const line of frame.split("\n")) {
+                    if (!line.startsWith("data:")) continue;
+                    const json = line.slice(5).trim();
+                    try {
+                        const event: JobEvent = JSON.parse(json);
+                        onEvent(event);
+                    } catch {
+                        console.warn("[SSE] Failed to parse event:", json);
+                    }
+                }
+            }
         }
-
-        const text = decoder.decode(value, {stream: true});
-
-      }
-    } catch (error) {
-        console.error("Error fetching job logs:", error);
-        throw error;
+    } finally {
+        reader.releaseLock();
     }
 }
 }
